@@ -1,7 +1,7 @@
 # Custom ignored folders/files
-/data
-/models
-/submissions
+/data/*
+/models/*
+/submissions/*
 wandb
 
 # Byte-compiled / optimized / DLL files
