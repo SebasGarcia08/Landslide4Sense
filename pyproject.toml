@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "landslide4sense"
+version = "0.0.1"
+description = "Detecting landslide with AI"
+authors = ["sebastiangarciaacosta <sebastian.garcia@wearemo.com>"]
+
+[[tool.poetry.source]]
+name = 'torch_stable'
+url = '-f https://download.pytorch.org/whl/torch_stable.html'
+
+
+[tool.poetry.dependencies]
+pip = "22.0.4"
+python = ">=3.8,<3.11"
+pandas = "^1.4.2"
+matplotlib = "^3.5.1"
+numpy = "^1.22.3"
+scipy = "^1.8.0"
+PyYAML = "5.1"
+wandb = "^0.12.11"
+dvc = {extras = ["gs"], version = "^2.10.1"}
+torch = "1.7.1+cu101"
+
+[tool.poetry.dev-dependencies]
+ipykernel = "^6.12.1"
+jupyter = "^1.0.0"
+pip-tools = "^6.6.0"
+google-api-python-client = "^2.43.0"
+google-cloud-storage = "^2.2.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
