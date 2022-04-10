@@ -28,9 +28,7 @@ name_classes = ["Non-Landslide", "Landslide"]
 
 @hydra.main(config_path="../conf", config_name="config")
 def main(cfg: Config):
-    print(cfg)
-    return
-    train_cfg = cfg.training
+    train_cfg = cfg.train
     model_cfg = cfg.model
     data_cfg = cfg.data
 

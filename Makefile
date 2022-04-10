@@ -25,9 +25,4 @@ train:
 	python scripts/train.py
 
 predict:
-	python scripts/predict.py\
-		--data_dir ./data/ \
-		--gpu_id 0 \
-		--test_list ./data/valid.txt \
-		--snapshot_dir /content/Landslide4Sense/submissions/baseline/ \
-		--restore_from /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/baseline/epoch7.pth
+	python scripts/predict.py
