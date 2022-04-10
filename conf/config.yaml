@@ -1,7 +1,7 @@
 data:
   dir: ./data/
   train_list: ./data/train.txt
-  test_list: ./data/test.txt
+  test_list: ./data/valid.txt
 
 model:
   input_size: 128,128
