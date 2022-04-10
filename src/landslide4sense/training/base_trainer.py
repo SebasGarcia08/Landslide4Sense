@@ -62,7 +62,7 @@ class Trainer:
             epoch_logs: OptionalDict = dict()
             self.callback_container.on_epoch_begin(epoch, epoch_logs)
 
-            for batch_id, batch in tqdm(enumerate(self.train_set)):
+            for batch_id, batch in tqdm(enumerate(self.train_set), total=steps_per_epoch, desc=f"Epoch {epoch + 1}"):
                 batch_logs: OptionalDict = dict()
                 self.callback_container.on_batch_begin(batch_id, batch_logs)
                 self.train_step(batch_id, batch, batch_logs=batch_logs)
@@ -72,9 +72,9 @@ class Trainer:
 
             for eval_name, eval_set in zip(self.eval_names, self.eval_sets):
                 eval_batch_logs: OptionalDict = dict()
-                self.callback_container.on_batch_begin(0, eval_batch_logs)
+                self.callback_container.on_epoch_begin(0, eval_batch_logs)
                 self.eval(eval_name, eval_set, eval_batch_logs)
-                self.callback_container.on_batch_end(0, eval_batch_logs)
+                self.callback_container.on_epoch_end(0, eval_batch_logs)
 
             self.callback_container.on_epoch_end(epoch, epoch_logs)
             if self.stop_training:

@@ -48,11 +48,11 @@ def get_arguments():
     parser.add_argument(
         "--train_list",
         type=str,
-        default="./dataset/train.txt",
+        default="./data/train.txt",
         help="training list file.",
     )
     parser.add_argument(
-        "--test_list", type=str, default="./dataset/train.txt", help="test list file."
+        "--test_list", type=str, default="./data/train.txt", help="test list file."
     )
     parser.add_argument(
         "--input_size",
@@ -146,17 +146,15 @@ def main():
 
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
 
-    wandb_callback = (
-        WandbCallback(
+    wandb_callback = WandbCallback(
             {"config": args, "project": "landslide4sense", "name": "baseline"}
-        ),
     )
 
     callbacks = [
-        EarlyStopping(monitor="train_f1", mode="max", patience=3, best_result=0.5),
         ModelCheckpointer(os.path.join(snapshot_dir, wandb_callback.run.name), "f1"),
         ProgressPrinter(),
         wandb_callback,
+        EarlyStopping(monitor="train_f1", mode="max", patience=3, best_result=0.5),
     ]
 
     trainer = ModelTrainer(
