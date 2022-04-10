@@ -68,7 +68,9 @@ class ModelTrainer(Trainer):
         n_valid_sample_all = 0
         F1 = np.zeros((self.num_classes, 1))
 
-        for _, batch in tqdm(enumerate(eval_set), desc="Evaluating...", total=len(eval_set)):
+        for _, batch in tqdm(
+            enumerate(eval_set), desc="Evaluating...", total=len(eval_set)
+        ):
             image, label, _, name = batch
             label = label.squeeze().numpy()
             image = image.float().to(self.device)
@@ -94,8 +96,8 @@ class ModelTrainer(Trainer):
             R = TP_all[i] * 1.0 / (TP_all[i] + FN_all[i] + epsilon)
             F1[i] = 2.0 * P * R / (P + R + epsilon)
             if i == 1:
-                batch_logs[f"{eval_name}_precision"] = P * 100
-                batch_logs[f"{eval_name}_recall"] = P * 100
+                batch_logs[f"{eval_name}_precision"] = P[0] * 100
+                batch_logs[f"{eval_name}_recall"] = R[0] * 100
                 batch_logs[f"{eval_name}_f1"] = F1[i] * 100
 
         mF1 = np.mean(F1)
