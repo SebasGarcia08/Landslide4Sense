@@ -16,7 +16,7 @@ model:
   name: Unet
 
 train:
-  run_name: baseline
+  run_name: baseline_split
   tags:
     - val_split
   early_stopping:
@@ -24,12 +24,12 @@ train:
     mode: max
     patience: 3
     best_result: 0.5
-  steps_per_epoch: 500
-  batch_size: 64
+  steps_per_epoch: 200
+  batch_size: 96
   num_workers: 2
   learning_rate: 1e-3
-  num_steps: 5000
-  num_steps_stop: 5000
+  num_steps: 10000
+  num_steps_stop: 10000
   weight_decay: 5e-4
   gpu_id: 0
   snapshot_dir: ./exp/
