@@ -22,12 +22,7 @@ poetry:
 	poetry install
 
 train:
-	python scripts/train.py \
-	    --data_dir ./data/ \
-	    --gpu_id 0\
-		--num_workers 2\
-		--bacth_size 64\
-	    --snapshot_dir /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
+	python scripts/train.py
 
 predict:
 	python scripts/predict.py\

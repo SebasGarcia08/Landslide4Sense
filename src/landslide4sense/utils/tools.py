@@ -1,7 +1,10 @@
 import numpy as np
+import typing as ty
 
 
-def eval_image(predict, label, num_classes):
+def eval_image(
+    predict: np.ndarray, label: np.ndarray, num_classes: int
+) -> ty.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
     index = np.where((label >= 0) & (label < num_classes))
     predict = predict[index]
     label = label[index]
@@ -18,3 +21,9 @@ def eval_image(predict, label, num_classes):
         FN[i] = np.sum(label[np.where(predict != i)] == i)
 
     return TP, FP, TN, FN, len(label)
+
+
+def import_name(module_name: str, name: str):
+    """Import a named object from a module in the context of this function."""
+    module = __import__(module_name, globals(), locals(), [name])
+    return vars(module)[name]
