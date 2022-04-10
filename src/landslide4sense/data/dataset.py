@@ -5,6 +5,8 @@ import h5py
 
 import typing as ty
 
+LabeledDatasetIterable = ty.Tuple[np.ndarray, np.ndarray, np.ndarray, str]
+UnlabeledDatasetIterable = ty.Tuple[np.ndarray, np.ndarray, str]
 
 class LandslideDataSet(Dataset):
     def __init__(
@@ -74,7 +76,7 @@ class LandslideDataSet(Dataset):
     def __len__(self) -> int:
         return len(self.files)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> ty.Union[LabeledDatasetIterable, UnlabeledDatasetIterable]:
         datafiles = self.files[index]
 
         if self.set == "labeled":
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     train_dataset = LandslideDataSet(
         data_dir="/scratch/Land4Sense_Competition/", list_path="./train.txt"
     )
-    
+
     train_loader = DataLoader(
         dataset=train_dataset, batch_size=1, shuffle=True, pin_memory=True
     )

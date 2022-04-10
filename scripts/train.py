@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-import time
 import os
 import torch
 import torch.nn as nn
@@ -8,19 +7,21 @@ import torch.optim as optim
 from torch.utils import data
 import torch.backends.cudnn as cudnn
 
-from landslide4sense.utils.tools import eval_image
 from landslide4sense.data import LandslideDataSet
+from landslide4sense.training import ModelTrainer
+from landslide4sense.training.callbacks import (
+    EarlyStopping,
+    ModelCheckpointer,
+    ProgressPrinter,
+    WandbCallback,
+)
 
 name_classes = ["Non-Landslide", "Landslide"]
-epsilon = 1e-14
 
 
-def importName(modulename: str, name: str):
+def import_name(modulename: str, name: str):
     """Import a named object from a module in the context of this function."""
-    try:
-        module = __import__(modulename, globals(), locals(), [name])
-    except ImportError:
-        return None
+    module = __import__(modulename, globals(), locals(), [name])
     return vars(module)[name]
 
 
@@ -37,11 +38,12 @@ def get_arguments():
     parser.add_argument(
         "--model_module",
         type=str,
-        default="model.Networks",
+        default="landslide4sense.models",
         help="model module to import",
     )
+
     parser.add_argument(
-        "--model_name", type=str, default="unet", help="modle name in given module"
+        "--model_name", type=str, default="Unet", help="modle name in given module"
     )
     parser.add_argument(
         "--train_list",
@@ -99,7 +101,13 @@ def get_arguments():
 
 def main():
     args = get_arguments()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+    if device == "cuda":
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+        cudnn.enabled = True
+        cudnn.benchmark = True
+
     snapshot_dir = args.snapshot_dir
     if not os.path.exists(snapshot_dir):
         os.makedirs(snapshot_dir)
@@ -107,16 +115,11 @@ def main():
     w, h = map(int, args.input_size.split(","))
     input_size = (w, h)
 
-    cudnn.enabled = True
-    cudnn.benchmark = True
-
     # Create network
-    model_import = importName(args.model_module, args.model_name)
-    model = model_import(n_classes=args.num_classes)
-    model.train()
-    model = model.cuda()
+    model_cls = import_name(args.model_module, args.model_name)
+    model = model_cls(n_classes=args.num_classes)
 
-    src_loader = data.DataLoader(
+    train_loader = data.DataLoader(
         LandslideDataSet(
             args.data_dir,
             args.train_list,
@@ -141,111 +144,36 @@ def main():
         model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
     )
 
-    interp = nn.Upsample(size=(input_size[1], input_size[0]), mode="bilinear")
-
-    hist = np.zeros((args.num_steps_stop, 3))
-    F1_best = 0.5
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
 
-    for batch_id, src_data in enumerate(src_loader):
-        if batch_id == args.num_steps_stop:
-            break
-        tem_time = time.time()
-        model.train()
-        optimizer.zero_grad()
+    wandb_callback = (
+        WandbCallback(
+            {"config": args, "project": "landslide4sense", "name": "baseline"}
+        ),
+    )
 
-        images, labels, _, _ = src_data
-        images = images.cuda()
-        pred = model(images)
+    callbacks = [
+        EarlyStopping(monitor="train_f1", mode="max", patience=3, best_result=0.5),
+        ModelCheckpointer(os.path.join(snapshot_dir, wandb_callback.run.name), "f1"),
+        ProgressPrinter(),
+        wandb_callback,
+    ]
 
-        pred_interp = interp(pred)
+    trainer = ModelTrainer(
+        model,
+        optimizer,
+        cross_entropy_loss,
+        train_set=train_loader,
+        eval_sets=[test_loader],
+        eval_names=["train"],
+        input_size=input_size,
+        num_classes=args.num_classes,
+        device=device,
+    )
 
-        # CE Loss
-        labels = labels.cuda().long()
-        cross_entropy_loss_value = cross_entropy_loss(pred_interp, labels)
-        _, predict_labels = torch.max(pred_interp, 1)
-        predict_labels = predict_labels.detach().cpu().numpy()
-        labels = labels.cpu().numpy()
-        batch_oa = np.sum(predict_labels == labels) * 1.0 / len(labels.reshape(-1))
-
-        hist[batch_id, 0] = cross_entropy_loss_value.item()
-        hist[batch_id, 1] = batch_oa
-
-        cross_entropy_loss_value.backward()
-        optimizer.step()
-
-        hist[batch_id, -1] = time.time() - tem_time
-
-        if (batch_id + 1) % 10 == 0:
-            print(
-                "Iter %d/%d Time: %.2f Batch_OA = %.1f cross_entropy_loss = %.3f"
-                % (
-                    batch_id + 1,
-                    args.num_steps,
-                    10 * np.mean(hist[batch_id - 9 : batch_id + 1, -1]),
-                    np.mean(hist[batch_id - 9 : batch_id + 1, 1]) * 100,
-                    np.mean(hist[batch_id - 9 : batch_id + 1, 0]),
-                )
-            )
-
-        # evaluation per 500 iterations
-        if (batch_id + 1) % 500 == 0:
-            print("Testing..........")
-            model.eval()
-            TP_all = np.zeros((args.num_classes, 1))
-            FP_all = np.zeros((args.num_classes, 1))
-            TN_all = np.zeros((args.num_classes, 1))
-            FN_all = np.zeros((args.num_classes, 1))
-            n_valid_sample_all = 0
-            F1 = np.zeros((args.num_classes, 1))
-
-            for _, batch in enumerate(test_loader):
-                image, label, _, name = batch
-                label = label.squeeze().numpy()
-                image = image.float().cuda()
-
-                with torch.no_grad():
-                    pred = model(image)
-
-                _, pred = torch.max(
-                    interp(nn.functional.softmax(pred, dim=1)).detach(), 1
-                )
-                pred = pred.squeeze().data.cpu().numpy()
-
-                TP, FP, TN, FN, n_valid_sample = eval_image(
-                    pred.reshape(-1), label.reshape(-1), args.num_classes
-                )
-                TP_all += TP
-                FP_all += FP
-                TN_all += TN
-                FN_all += FN
-                n_valid_sample_all += n_valid_sample
-
-            OA = np.sum(TP_all) * 1.0 / n_valid_sample_all
-            for i in range(args.num_classes):
-                P = TP_all[i] * 1.0 / (TP_all[i] + FP_all[i] + epsilon)
-                R = TP_all[i] * 1.0 / (TP_all[i] + FN_all[i] + epsilon)
-                F1[i] = 2.0 * P * R / (P + R + epsilon)
-                if i == 1:
-                    print("===>" + name_classes[i] + " Precision: %.2f" % (P * 100))
-                    print("===>" + name_classes[i] + " Recall: %.2f" % (R * 100))
-                    print("===>" + name_classes[i] + " F1: %.2f" % (F1[i] * 100))
-
-            mF1 = np.mean(F1)
-            print("===> mean F1: %.2f OA: %.2f" % (mF1 * 100, OA * 100))
-
-            if F1[1] > F1_best:
-                F1_best = F1[1]
-                # save the models
-                print("Save Model")
-                model_name = (
-                    "batch"
-                    + repr(batch_id + 1)
-                    + "_F1_"
-                    + repr(int(F1[1] * 10000))
-                    + ".pth"
-                )
-                torch.save(model.state_dict(), os.path.join(snapshot_dir, model_name))
+    trainer.train(
+        max_epochs=args.num_steps_stop // 500, steps_per_epoch=500, callbacks=callbacks
+    )
 
 
 if __name__ == "__main__":
