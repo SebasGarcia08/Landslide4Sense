@@ -98,7 +98,7 @@ class ModelTrainer(Trainer):
             if i == 1:
                 batch_logs[f"{eval_name}_precision"] = P[0] * 100
                 batch_logs[f"{eval_name}_recall"] = R[0] * 100
-                batch_logs[f"{eval_name}_f1"] = F1[i] * 100
+                batch_logs[f"{eval_name}_f1"] = F1[i][0] * 100
 
         mF1 = np.mean(F1)
         batch_logs[f"{eval_name}_mean_f1"] = mF1 * 100
