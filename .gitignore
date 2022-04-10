@@ -3,6 +3,8 @@
 /models/*
 /submissions/*
 wandb
+# Hydra outputs
+/outputs
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
