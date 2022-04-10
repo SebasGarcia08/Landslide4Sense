@@ -1,5 +1,6 @@
 import os
 import typing as ty
+import logging
 
 import torch
 import torch.nn as nn
@@ -21,6 +22,8 @@ from landslide4sense.training.callbacks import (
 
 import hydra
 from hydra.core.config_store import ConfigStore
+
+logger = logging.getLogger(__name__)
 
 cs = ConfigStore.instance()
 cs.store(name="config", node=Config)
@@ -108,6 +111,11 @@ def main(cfg: Config):
     # Instantiate model
     model_cls = import_name(cfg.model.module, cfg.model.name)
     model = model_cls(n_classes=cfg.model.num_classes)
+    if cfg.train.restore_from:
+        logger.info(f"Restoring moddel from checkpoint: {cfg.train.restore_from}...")
+        saved_state_dict = torch.load(cfg.train.restore_from)
+        model.load_state_dict(saved_state_dict)
+
     optimizer = optim.Adam(
         model.parameters(),
         lr=cfg.train.learning_rate,
