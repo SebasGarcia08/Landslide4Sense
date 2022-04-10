@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+import typing as ty
 
 @dataclass
 class Data:
@@ -12,6 +12,8 @@ class Data:
 
     dir: str
     train_list: str
+    eval_lists_paths: ty.List[str]
+    eval_names: ty.List[str]
     test_list: str
 
 
@@ -46,7 +48,9 @@ class Train:
         restore_from: restore from snapshot
         seed: random seed
     """
-
+    run_name: str
+    tags: ty.List[str]
+    steps_per_epoch: int
     batch_size: int
     num_workers: int
     learning_rate: float

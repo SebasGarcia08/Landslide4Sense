@@ -61,13 +61,20 @@ def main(cfg: Config):
         pin_memory=True,
     )
 
-    test_loader = data.DataLoader(
-        LandslideDataSet(cfg.data.dir, cfg.data.train_list, set="labeled"),
+    eval_set_kwargs = dict(
         batch_size=1,
         shuffle=False,
         num_workers=cfg.train.num_workers,
         pin_memory=True,
     )
+
+    eval_sets = [
+        data.DataLoader(
+            LandslideDataSet(cfg.data.dir, eval_list_path, set="labeled"),
+            **eval_set_kwargs,
+        )
+        for eval_list_path in cfg.data.eval_lists_paths
+    ]
 
     optimizer = optim.Adam(
         model.parameters(),
@@ -78,7 +85,12 @@ def main(cfg: Config):
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
 
     wandb_callback = WandbCallback(
-        {"config": cfg, "project": "landslide4sense", "name": "baseline"}
+        {
+            "config": cfg,
+            "project": "landslide4sense",
+            "name": cfg.train.run_name,
+            "tags": cfg.train.tags,
+        }
     )
 
     callbacks = [
@@ -93,8 +105,8 @@ def main(cfg: Config):
         optimizer,
         cross_entropy_loss,
         train_set=train_loader,
-        eval_sets=[test_loader],
-        eval_names=["train"],
+        eval_sets=eval_sets,
+        eval_names=cfg.data.eval_names,
         input_size=input_size,
         num_classes=cfg.model.num_classes,
         device=device,
@@ -102,7 +114,7 @@ def main(cfg: Config):
 
     trainer.train(
         max_epochs=cfg.train.num_steps_stop // 500,
-        steps_per_epoch=500,
+        steps_per_epoch=cfg.train.steps_per_epoch,
         callbacks=callbacks,
     )
 
