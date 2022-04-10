@@ -32,6 +32,6 @@ train:
   num_steps_stop: 10000
   weight_decay: 5e-4
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
+  snapshot_dir: ${hydra:runtime.cwd}/data/submissions/
   restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/baseline_split/epoch_2_val_f1=[70.50162226].pth
   seed: 42
