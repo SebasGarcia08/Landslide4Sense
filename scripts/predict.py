@@ -39,7 +39,8 @@ def main(cfg: Config):
     cudnn.benchmark = True
 
     # Create network
-    model = Unet(n_classes=cfg.model.num_classes)
+    model_cls = import_name(cfg.model.module, cfg.model.name)
+    model = model_cls(n_classes=cfg.model.num_classes)
 
     saved_state_dict = torch.load(cfg.train.restore_from)
     model.load_state_dict(saved_state_dict)
