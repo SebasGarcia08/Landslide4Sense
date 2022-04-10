@@ -1,10 +1,11 @@
-from ..data.dataset import LabeledDatasetIterable
+from ..data.dataset import LandslideDataSet, LabeledDatasetIterable
 from .base_trainer import Trainer
 from ..utils.tools import eval_image
 from .. import EPSILON
 
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 import numpy as np
 import torch.nn.functional as F
 
@@ -56,7 +57,7 @@ class ModelTrainer(Trainer):
     def eval(
         self,
         eval_name: str,
-        eval_set: LabeledDatasetIterable,
+        eval_set: DataLoader[LandslideDataSet],
         batch_logs: ty.Dict[str, ty.Any],
     ) -> None:
         self.model.eval()

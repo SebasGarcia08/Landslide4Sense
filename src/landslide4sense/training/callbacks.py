@@ -23,7 +23,6 @@ class ProgressPrinter(Callback):
     end_time: float = None
 
     def on_epoch_begin(self, epoch: int, logs: OptionalDict = None) -> None:
-        print(f"{self.epoch_name}: {epoch}")
         self.start_time = time.time()
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
@@ -44,6 +43,7 @@ class EarlyStopping(Callback):
     best_epoch: int = 0
     best_result: float = np.inf
     stopped_epoch: int = 0
+    improved: bool = False
     _best_weights: ty.Optional[ty.Dict[str, Tensor]] = None
     _wait: int = 0
 
@@ -55,15 +55,17 @@ class EarlyStopping(Callback):
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
         epoch_res = logs.get(self.monitor)
         if epoch_res is None:
-            logger.warning(f"Tried to search for {self.monitor} in logs, but found: {logs}")
+            logger.warning(
+                f"Tried to search for {self.monitor} in logs, but found: {logs}"
+            )
             return
-        
-        if self.mode == "min":
-            improved: bool = epoch_res < self.best_result
-        else:
-            improved: bool = epoch_res > self.best_result
 
-        if improved:
+        if self.mode == "min":
+            self.improved: bool = epoch_res < self.best_result
+        else:
+            self.improved: bool = epoch_res > self.best_result
+
+        if self.improved:
             self.best_epoch = epoch
             self._best_weights = copy.deepcopy(self.trainer.model.state_dict())
             self.best_result = epoch_res
@@ -103,14 +105,19 @@ class EarlyStopping(Callback):
 @dataclass
 class ModelCheckpointer(Callback):
     save_dir: str
-    eval_set: str
+    early_stopper: ty.Optional[EarlyStopping] = None
 
     def __post_init__(self):
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
-        snapshot_name = "epoch" + repr(epoch) + ".pth"
+        if self.early_stopper is None:
+            snapshot_name = f"epoch_{epoch}.pth"
+        else:
+            if not self.early_stopper.improved:
+                return
+            snapshot_name = f"epoch_{epoch}_{self.early_stopper.monitor}={self.early_stopper.best_result}.pth"
         model_path = os.path.join(self.save_dir, snapshot_name)
         torch.save(self.trainer.model.state_dict(), model_path)
 

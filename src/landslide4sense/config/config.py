@@ -32,6 +32,20 @@ class Model:
     module: str
     name: str
 
+@dataclass
+class EarlyStoppingConfig:
+    """
+    Arguments:
+        patience: number of epochs with no improvement after which training will be stopped
+        mode: one of {min, max}
+        monitor: metric to monitor
+        best_result: best result to compare with
+    """
+
+    patience: int
+    mode: str
+    monitor: str
+    best_result: float
 
 @dataclass
 class Train:
@@ -50,6 +64,7 @@ class Train:
     """
     run_name: str
     tags: ty.List[str]
+    early_stopping: EarlyStoppingConfig
     steps_per_epoch: int
     batch_size: int
     num_workers: int

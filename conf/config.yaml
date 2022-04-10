@@ -17,8 +17,13 @@ model:
 
 train:
   run_name: baseline
-  tags: 
-    -
+  tags:
+    - val_split
+  early_stopping:
+    monitor: val_f1
+    mode: max
+    patience: 3
+    best_result: 0.5
   steps_per_epoch: 500
   batch_size: 64
   num_workers: 2

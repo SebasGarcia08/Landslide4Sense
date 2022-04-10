@@ -5,9 +5,11 @@ from abc import abstractmethod
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
 from tqdm import tqdm
 
+from ..data.dataset import LandslideDataSet, LabeledDatasetIterable
 from .base_callbacks import Callback, CallbackContainer, OptionalDict
 from ..data.dataset import LabeledDatasetIterable
 
@@ -19,8 +21,8 @@ class Trainer:
 
     loss_fn: ty.Callable[[Tensor, Tensor], Tensor]
 
-    train_set: LabeledDatasetIterable
-    eval_sets: ty.List[LabeledDatasetIterable]
+    train_set: DataLoader[LandslideDataSet]
+    eval_sets: ty.List[DataLoader[LandslideDataSet]]
     eval_names: ty.List[str]
     device: str
 
@@ -40,7 +42,7 @@ class Trainer:
     def eval(
         self,
         eval_name: str,
-        eval_set: LabeledDatasetIterable,
+        eval_set: DataLoader[LandslideDataSet],
         batch_logs: ty.Dict[str, ty.Any],
     ) -> None:
         raise NotImplementedError
@@ -62,7 +64,11 @@ class Trainer:
             epoch_logs: OptionalDict = dict()
             self.callback_container.on_epoch_begin(epoch, epoch_logs)
 
-            for batch_id, batch in tqdm(enumerate(self.train_set), total=steps_per_epoch, desc=f"Epoch {epoch + 1}"):
+            for batch_id, batch in tqdm(
+                enumerate(self.train_set),
+                total=steps_per_epoch,
+                desc=f"Epoch {epoch + 1}",
+            ):
                 batch_logs: OptionalDict = dict()
                 self.callback_container.on_batch_begin(batch_id, batch_logs)
                 self.train_step(batch_id, batch, batch_logs=batch_logs)

@@ -1,14 +1,16 @@
 import os
+import typing as ty
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils import data
+from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 
 from landslide4sense.config import Config
 from landslide4sense.data import LandslideDataSet
 from landslide4sense.training import ModelTrainer
+from landslide4sense.training.base_callbacks import Callback
 from landslide4sense.utils import import_name, set_deterministic
 from landslide4sense.training.callbacks import (
     EarlyStopping,
@@ -26,29 +28,39 @@ cs.store(name="config", node=Config)
 name_classes = ["Non-Landslide", "Landslide"]
 
 
-@hydra.main(config_path="../conf", config_name="config")
-def main(cfg: Config):
-    set_deterministic(cfg.train.seed)
+def setup_callbacks(cfg: Config) -> ty.List[Callback]:
+    wandb_callback = WandbCallback(
+        {
+            "config": cfg,
+            "project": "landslide4sense",
+            "name": cfg.train.run_name,
+            "tags": cfg.train.tags,
+        }
+    )
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using device: {device}")
-    if device == "cuda":
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
-        cudnn.enabled = True
-        cudnn.benchmark = True
+    early_stopper = EarlyStopping(
+        monitor=cfg.train.early_stopping.monitor,
+        mode=cfg.train.early_stopping.mode,
+        patience=cfg.train.early_stopping.patience,
+        best_result=cfg.train.early_stopping.best_result,
+    )
 
-    snapshot_dir = cfg.train.snapshot_dir
-    if not os.path.exists(snapshot_dir):
-        os.makedirs(snapshot_dir)
+    model_checkpointer = ModelCheckpointer(
+        os.path.join(cfg.train.snapshot_dir, wandb_callback.run.name), early_stopper
+    )
 
-    w, h = map(int, cfg.model.input_size.split(","))
-    input_size = (w, h)
+    return [
+        early_stopper,
+        model_checkpointer,
+        ProgressPrinter(),
+        wandb_callback,
+    ]
 
-    # Create network
-    model_cls = import_name(cfg.model.module, cfg.model.name)
-    model = model_cls(n_classes=cfg.model.num_classes)
 
-    train_loader = data.DataLoader(
+def setup_datasets(
+    cfg: Config,
+) -> ty.Tuple[DataLoader[LandslideDataSet], ty.List[DataLoader[LandslideDataSet]]]:
+    train_loader: DataLoader[LandslideDataSet] = DataLoader(
         LandslideDataSet(
             cfg.data.dir,
             cfg.data.train_list,
@@ -68,37 +80,42 @@ def main(cfg: Config):
         pin_memory=True,
     )
 
-    eval_sets = [
-        data.DataLoader(
+    eval_sets: ty.List[DataLoader[LandslideDataSet]] = [
+        DataLoader(
             LandslideDataSet(cfg.data.dir, eval_list_path, set="labeled"),
             **eval_set_kwargs,
         )
         for eval_list_path in cfg.data.eval_lists_paths
     ]
 
+    return train_loader, eval_sets
+
+
+@hydra.main(config_path="../conf", config_name="config")
+def main(cfg: Config):
+    set_deterministic(cfg.train.seed)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+    if device == "cuda":
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
+        cudnn.enabled = True
+        cudnn.benchmark = True
+
+    w, h = map(int, cfg.model.input_size.split(","))
+    input_size = (w, h)
+
+    # Instantiate model
+    model_cls = import_name(cfg.model.module, cfg.model.name)
+    model = model_cls(n_classes=cfg.model.num_classes)
     optimizer = optim.Adam(
         model.parameters(),
         lr=cfg.train.learning_rate,
         weight_decay=cfg.train.weight_decay,
     )
-
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
-
-    wandb_callback = WandbCallback(
-        {
-            "config": cfg,
-            "project": "landslide4sense",
-            "name": cfg.train.run_name,
-            "tags": cfg.train.tags,
-        }
-    )
-
-    callbacks = [
-        ModelCheckpointer(os.path.join(snapshot_dir, wandb_callback.run.name), "train"),
-        ProgressPrinter(),
-        wandb_callback,
-        EarlyStopping(monitor="train_f1", mode="max", patience=3, best_result=0.5),
-    ]
+    train_loader, eval_sets = setup_datasets(cfg)
+    callbacks = setup_callbacks(cfg)
 
     trainer = ModelTrainer(
         model,
@@ -113,7 +130,7 @@ def main(cfg: Config):
     )
 
     trainer.train(
-        max_epochs=cfg.train.num_steps_stop // 500,
+        max_epochs=cfg.train.num_steps_stop // cfg.train.steps_per_epoch,
         steps_per_epoch=cfg.train.steps_per_epoch,
         callbacks=callbacks,
     )
