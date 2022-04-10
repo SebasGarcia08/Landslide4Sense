@@ -45,6 +45,7 @@ def get_arguments():
     parser.add_argument(
         "--model_name", type=str, default="Unet", help="modle name in given module"
     )
+
     parser.add_argument(
         "--train_list",
         type=str,
@@ -147,7 +148,7 @@ def main():
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
 
     wandb_callback = WandbCallback(
-            {"config": args, "project": "landslide4sense", "name": "baseline"}
+        {"config": args, "project": "landslide4sense", "name": "baseline"}
     )
 
     callbacks = [

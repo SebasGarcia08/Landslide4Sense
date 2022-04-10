@@ -15,6 +15,7 @@ h5py = "3.1.0"
 albumentations= "1.1.0"
 ipykernel = "^6.12.1"
 jupyter = "^1.0.0"
+hydra-core = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 pip-tools = "^6.6.0"
