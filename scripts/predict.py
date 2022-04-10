@@ -21,40 +21,36 @@ cs.store(name="config", node=Config)
 
 
 name_classes = ["Non-Landslide", "Landslide"]
-epsilon = 1e-14
 
 
 @hydra.main(config_path="../conf", config_name="config")
 def main(cfg: Config):
-    train_cfg = cfg.train
-    model_cfg = cfg.model
-    data_cfg = cfg.data
-    set_deterministic(train_cfg.seed)
+    set_deterministic(cfg.train.seed)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(train_cfg.gpu_id)
-    snapshot_dir = train_cfg.snapshot_dir
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
+    snapshot_dir = cfg.train.snapshot_dir
     if os.path.exists(snapshot_dir) == False:
         os.makedirs(snapshot_dir)
 
-    w, h = map(int, model_cfg.input_size.split(","))
+    w, h = map(int, cfg.model.input_size.split(","))
     input_size = (w, h)
 
     cudnn.enabled = True
     cudnn.benchmark = True
 
     # Create network
-    model = Unet(n_classes=model_cfg.num_classes)
+    model = Unet(n_classes=cfg.model.num_classes)
 
-    saved_state_dict = torch.load(train_cfg.restore_from)
+    saved_state_dict = torch.load(cfg.train.restore_from)
     model.load_state_dict(saved_state_dict)
 
     model = model.cuda()
 
     test_loader = data.DataLoader(
-        LandslideDataSet(data_cfg.dir, data_cfg.test_list, set="unlabeled"),
+        LandslideDataSet(cfg.data.dir, cfg.data.test_list, set="unlabeled"),
         batch_size=1,
         shuffle=False,
-        num_workers=train_cfg.num_workers,
+        num_workers=cfg.train.num_workers,
         pin_memory=True,
     )
 

@@ -28,55 +28,51 @@ name_classes = ["Non-Landslide", "Landslide"]
 
 @hydra.main(config_path="../conf", config_name="config")
 def main(cfg: Config):
-    train_cfg = cfg.train
-    model_cfg = cfg.model
-    data_cfg = cfg.data
-
-    set_deterministic(train_cfg.seed)
+    set_deterministic(cfg.train.seed)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     if device == "cuda":
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(train_cfg.gpu_id)
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
         cudnn.enabled = True
         cudnn.benchmark = True
 
-    snapshot_dir = train_cfg.snapshot_dir
+    snapshot_dir = cfg.train.snapshot_dir
     if not os.path.exists(snapshot_dir):
         os.makedirs(snapshot_dir)
 
-    w, h = map(int, model_cfg.input_size.split(","))
+    w, h = map(int, cfg.model.input_size.split(","))
     input_size = (w, h)
 
     # Create network
-    model_cls = import_name(model_cfg.module, model_cfg.name)
-    model = model_cls(n_classes=model_cfg.num_classes)
+    model_cls = import_name(cfg.model.module, cfg.model.name)
+    model = model_cls(n_classes=cfg.model.num_classes)
 
     train_loader = data.DataLoader(
         LandslideDataSet(
-            data_cfg.dir,
-            data_cfg.train_list,
-            max_iters=train_cfg.num_steps_stop * train_cfg.batch_size,
+            cfg.data.dir,
+            cfg.data.train_list,
+            max_iters=cfg.train.num_steps_stop * cfg.train.batch_size,
             set="labeled",
         ),
-        batch_size=train_cfg.batch_size,
+        batch_size=cfg.train.batch_size,
         shuffle=True,
-        num_workers=train_cfg.num_workers,
+        num_workers=cfg.train.num_workers,
         pin_memory=True,
     )
 
     test_loader = data.DataLoader(
-        LandslideDataSet(data_cfg.dir, data_cfg.train_list, set="labeled"),
+        LandslideDataSet(cfg.data.dir, cfg.data.train_list, set="labeled"),
         batch_size=1,
         shuffle=False,
-        num_workers=train_cfg.num_workers,
+        num_workers=cfg.train.num_workers,
         pin_memory=True,
     )
 
     optimizer = optim.Adam(
         model.parameters(),
-        lr=train_cfg.learning_rate,
-        weight_decay=train_cfg.weight_decay,
+        lr=cfg.train.learning_rate,
+        weight_decay=cfg.train.weight_decay,
     )
 
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
@@ -100,12 +96,12 @@ def main(cfg: Config):
         eval_sets=[test_loader],
         eval_names=["train"],
         input_size=input_size,
-        num_classes=model_cfg.num_classes,
+        num_classes=cfg.model.num_classes,
         device=device,
     )
 
     trainer.train(
-        max_epochs=train_cfg.num_steps_stop // 500,
+        max_epochs=cfg.train.num_steps_stop // 500,
         steps_per_epoch=500,
         callbacks=callbacks,
     )
