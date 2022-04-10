@@ -6,11 +6,8 @@ from torch.utils import data
 import torch.backends.cudnn as cudnn
 import h5py
 
-
-from landslide4sense.utils.tools import *
 from landslide4sense.data import LandslideDataSet
-from landslide4sense.models import Unet
-from landslide4sense.utils import set_deterministic
+from landslide4sense.utils import set_deterministic, import_name
 from landslide4sense.config import Config
 
 import hydra
