@@ -24,14 +24,14 @@ train:
     mode: max
     patience: 3
     best_result: 0.5
-  steps_per_epoch: 200
-  batch_size: 96
+  steps_per_epoch: 34
+  batch_size: 100
   num_workers: 2
   learning_rate: 1e-3
   num_steps: 10000
   num_steps_stop: 10000
   weight_decay: 5e-4
   gpu_id: 0
-  snapshot_dir: ./exp/
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
   restore_from: ""
   seed: 42
