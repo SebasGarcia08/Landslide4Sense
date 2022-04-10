@@ -1,6 +1,7 @@
 from ..data.dataset import LabeledDatasetIterable
 from .base_trainer import Trainer
 from ..utils.tools import eval_image
+from .. import EPSILON
 
 import torch
 from torch import nn
@@ -11,8 +12,6 @@ from tqdm import tqdm
 
 from dataclasses import dataclass
 import typing as ty
-
-epsilon = 1e-14
 
 
 @dataclass
@@ -92,9 +91,9 @@ class ModelTrainer(Trainer):
 
         OA = np.sum(TP_all) * 1.0 / n_valid_sample_all
         for i in range(self.num_classes):
-            P = TP_all[i] * 1.0 / (TP_all[i] + FP_all[i] + epsilon)
-            R = TP_all[i] * 1.0 / (TP_all[i] + FN_all[i] + epsilon)
-            F1[i] = 2.0 * P * R / (P + R + epsilon)
+            P = TP_all[i] * 1.0 / (TP_all[i] + FP_all[i] + EPSILON)
+            R = TP_all[i] * 1.0 / (TP_all[i] + FN_all[i] + EPSILON)
+            F1[i] = 2.0 * P * R / (P + R + EPSILON)
             if i == 1:
                 batch_logs[f"{eval_name}_precision"] = P[0] * 100
                 batch_logs[f"{eval_name}_recall"] = R[0] * 100
