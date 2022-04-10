@@ -1,7 +1,7 @@
 data:
-  dir: ./data/
-  train_list: ./data/train.txt
-  test_list: ./data/valid.txt
+  dir: ${hydra:runtime.cwd}/data/
+  train_list: ${hydra:runtime.cwd}/data/train.txt
+  test_list: ${hydra:runtime.cwd}/data/valid.txt
 
 model:
   input_size: 128,128
