@@ -26,12 +26,6 @@ class ProgressPrinter(Callback):
         print(f"{self.epoch_name}: {epoch}")
         self.start_time = time.time()
 
-    def on_batch_end(self, batch: int, logs: OptionalDict = None) -> None:
-        msg = f"\tBatch: {batch}\n"
-        for k, v in logs.items():
-            msg += f"\t\t{k}: {v}\n"
-        print(msg)
-
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
         self.end_time = time.time()
         elapsed = self.end_time - self.start_time
@@ -59,7 +53,11 @@ class EarlyStopping(Callback):
         super().__init__()
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
-        epoch_res = logs[self.monitor]
+        epoch_res = logs.get(self.monitor)
+        if epoch_res is None:
+            logger.warning(f"Tried to search for {self.monitor} in logs, but found: {logs}")
+            return
+        
         if self.mode == "min":
             improved: bool = epoch_res < self.best_result
         else:
