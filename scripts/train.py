@@ -134,10 +134,11 @@ def main(cfg: Config):
         saved_state_dict = torch.load(cfg.train.restore_from)
         model.load_state_dict(saved_state_dict)
 
-    optimizer = optim.Adam(
+    optimizer = optim.SGD(
         model.parameters(),
         lr=cfg.train.learning_rate,
         weight_decay=cfg.train.weight_decay,
+        momentum=0.9
     )
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
     train_loader, eval_sets = setup_datasets(cfg)

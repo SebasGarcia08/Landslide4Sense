@@ -59,7 +59,6 @@ train:
       patience: 5
       best_result: 0.5
     wandb:
-      id: 284m2txp
       name: split_data_aug_continuation
       tags:
         - val_split
