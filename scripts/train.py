@@ -153,13 +153,13 @@ def main(cfg: Config):
         input_size=input_size,
         num_classes=cfg.model.num_classes,
         device=device,
-        start_epoch=cfg.train.start_epoch
     )
 
     trainer.train(
         max_epochs=cfg.train.num_steps_stop // cfg.train.steps_per_epoch,
         steps_per_epoch=cfg.train.steps_per_epoch,
         callbacks=callbacks,
+        start_epoch=cfg.train.start_epoch
     )
 
 
