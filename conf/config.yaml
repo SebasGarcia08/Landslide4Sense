@@ -40,9 +40,10 @@ model:
   name: Unet
 
 train:
-  run_name: baseline_split
+  run_name: baseline_split_data_aug
   tags:
     - val_split
+    - spatial_data_aug
   early_stopping:
     monitor: val_f1
     mode: max

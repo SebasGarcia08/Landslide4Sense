@@ -8,6 +8,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 
+import albumentations as A
+
 from landslide4sense.config import Config, AugmentationConfig
 from landslide4sense.data import LandslideDataSet, Transformation
 from landslide4sense.training import ModelTrainer
