@@ -87,7 +87,7 @@ def setup_datasets(
     train_dataset = LandslideDataSet(
         cfg.data.dir,
         cfg.data.train_list,
-        max_iters=cfg.train.num_steps_stop * cfg.train.batch_size,
+        max_iters=cfg.train.steps_per_epoch * cfg.train.batch_size,
         set="labeled",
         transform=transform,
     )
