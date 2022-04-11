@@ -27,10 +27,10 @@ class ProgressPrinter(Callback):
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
         self.end_time = time.time()
-        if logs is not None or len(logs) == 0:
+        if logs is None or len(logs) == 0:
             return
         elapsed = self.end_time - self.start_time
-        msg = f"\t{self.epoch_name} summary\n"
+        msg = f"\t{self.epoch_name} {epoch} summary\n"
         msg += f"\tTime took: {elapsed:.2f}s\n"
         for k, v in logs.items():
             msg += f"\t\t{k}: {v}\n"
