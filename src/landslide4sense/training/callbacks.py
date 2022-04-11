@@ -27,6 +27,8 @@ class ProgressPrinter(Callback):
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
         self.end_time = time.time()
+        if logs is not None or len(logs) == 0:
+            return
         elapsed = self.end_time - self.start_time
         msg = f"\t{self.epoch_name} summary\n"
         msg += f"\tTime took: {elapsed:.2f}s\n"
@@ -66,10 +68,14 @@ class EarlyStopping(Callback):
             self.improved: bool = epoch_res > self.best_result
 
         if self.improved:
+            before_best_epoch = self.best_epoch
+            before_best_result = self.best_result
             self.best_epoch = epoch
             self._best_weights = copy.deepcopy(self.trainer.model.state_dict())
             self.best_result = epoch_res
             self._wait = 1
+            improvement_msg = f"Improvement in metric {self.monitor}, obtained {before_best_result} in epoch {before_best_epoch} and now {epoch_res} in epoch {epoch}"
+            logger.info(improvement_msg)
         else:
             if self._wait >= self.patience:
                 self.trainer.stop_training = True
@@ -119,6 +125,7 @@ class ModelCheckpointer(Callback):
                 return
             snapshot_name = f"epoch_{epoch}_{self.early_stopper.monitor}={self.early_stopper.best_result}.pth"
         model_path = os.path.join(self.save_dir, snapshot_name)
+        logger.info(f"Saving checkpoint at: {model_path}")
         torch.save(self.trainer.model.state_dict(), model_path)
 
 

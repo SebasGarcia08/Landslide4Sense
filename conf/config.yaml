@@ -40,23 +40,23 @@ model:
   name: Unet
 
 train:
-  run_name: baseline_split_data_aug
+  run_name: split_data_aug
   tags:
     - val_split
     - spatial_data_aug
   early_stopping:
     monitor: val_f1
     mode: max
-    patience: 3
+    patience: 5
     best_result: 0.5
-  steps_per_epoch: 34
-  batch_size: 100
+  steps_per_epoch: 500
+  batch_size: 32
   num_workers: 2
   learning_rate: 1e-3
   num_steps: 10000
   num_steps_stop: 10000
   weight_decay: 5e-4
   gpu_id: 0
-  snapshot_dir: ${hydra:runtime.cwd}/submissions/
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/baseline_split/epoch_2_val_f1=71.40289455772559.pth
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models
+  restore_from: 
   seed: 42
