@@ -132,10 +132,10 @@ class WandbCallback(Callback):
         self.run = wandb.init(**self.wandb_init_kwargs)
 
     def on_batch_end(self, batch: int, logs: OptionalDict = None) -> None:
-        wandb.log(logs)
+        wandb.log(logs, step=batch)
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
-        wandb.log(logs)
+        wandb.log(logs, step=epoch)
 
     def on_train_end(self, logs: OptionalDict = None) -> None:
         self.run.finish()

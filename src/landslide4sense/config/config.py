@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import typing as ty
 
+
 @dataclass
 class Data:
     """
@@ -32,6 +33,7 @@ class Model:
     module: str
     name: str
 
+
 @dataclass
 class EarlyStoppingConfig:
     """
@@ -46,6 +48,23 @@ class EarlyStoppingConfig:
     mode: str
     monitor: str
     best_result: float
+
+
+@dataclass
+class WandBConfig:
+    name: str
+    tags: ty.List[str]
+    project: str = "landslide4sense"
+    group: ty.Optional[str] = None
+    id: ty.Optional[str] = None
+    job_type: ty.Optional[str] = "train"
+
+
+@dataclass
+class CallbacksConfig:
+    early_stopping: EarlyStoppingConfig
+    wandb: WandBConfig
+
 
 @dataclass
 class Train:
@@ -62,9 +81,10 @@ class Train:
         restore_from: restore from snapshot
         seed: random seed
     """
+
     run_name: str
     tags: ty.List[str]
-    early_stopping: EarlyStoppingConfig
+    start_epoch: int
     steps_per_epoch: int
     batch_size: int
     num_workers: int
@@ -74,8 +94,9 @@ class Train:
     weight_decay: float
     gpu_id: int
     snapshot_dir: str
-    restore_from: str
     seed: int
+    callbacks: CallbacksConfig
+    restore_from: ty.Optional[str] = None
 
 
 @dataclass

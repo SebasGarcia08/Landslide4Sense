@@ -51,6 +51,7 @@ class Trainer:
         self,
         max_epochs: int = 10,
         steps_per_epoch: int = 500,
+        start_epoch: int = 0,
         callbacks: ty.Optional[ty.List[Callback]] = None,
     ) -> None:
         callbacks = [] or callbacks
@@ -60,14 +61,14 @@ class Trainer:
 
         self.callback_container.on_train_begin(dict())
 
-        for epoch in range(max_epochs):
+        for epoch in range(start_epoch, max_epochs):
             epoch_logs: OptionalDict = dict()
             self.callback_container.on_epoch_begin(epoch, epoch_logs)
 
             for batch_id, batch in tqdm(
                 enumerate(self.train_set),
-                total=steps_per_epoch,
-                desc=f"Epoch {epoch + 1}",
+                total=steps_per_epoch - 1,
+                desc=f"Epoch {epoch}",
             ):
                 batch_logs: OptionalDict = dict()
                 self.callback_container.on_batch_begin(batch_id, batch_logs)
@@ -78,9 +79,9 @@ class Trainer:
 
             for eval_name, eval_set in zip(self.eval_names, self.eval_sets):
                 eval_batch_logs: OptionalDict = dict()
-                self.callback_container.on_epoch_begin(0, eval_batch_logs)
+                self.callback_container.on_epoch_begin(epoch, eval_batch_logs)
                 self.eval(eval_name, eval_set, eval_batch_logs)
-                self.callback_container.on_epoch_end(0, eval_batch_logs)
+                self.callback_container.on_epoch_end(epoch, eval_batch_logs)
 
             self.callback_container.on_epoch_end(epoch, epoch_logs)
             if self.stop_training:

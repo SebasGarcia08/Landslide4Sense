@@ -16,14 +16,7 @@ model:
   name: Unet
 
 train:
-  run_name: baseline_split
-  tags:
-    - val_split
-  early_stopping:
-    monitor: val_f1
-    mode: max
-    patience: 3
-    best_result: 0.5
+  start_epoch: 0
   steps_per_epoch: 34
   batch_size: 100
   num_workers: 2
@@ -33,5 +26,15 @@ train:
   weight_decay: 5e-4
   gpu_id: 0
   snapshot_dir: ${hydra:runtime.cwd}/submissions/
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/baseline_split/epoch_2_val_f1=71.40289455772559.pth
   seed: 42
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug/epoch_7_val_f1=73.21207127753885.pth
+  callbacks:
+    early_stopping:
+      monitor: val_f1
+      mode: max
+      patience: 5
+      best_result: 0.5
+    wandb:
+      name: baseline_split
+      tags:
+        - val_split
