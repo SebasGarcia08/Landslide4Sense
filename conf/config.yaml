@@ -40,7 +40,7 @@ model:
   name: Unet
 
 train:
-  start_epoch: 0
+  start_epoch: 14
   steps_per_epoch: 34
   batch_size: 100
   num_workers: 2
@@ -49,9 +49,9 @@ train:
   num_steps_stop: 10000
   weight_decay: 5e-4
   gpu_id: 0
-  snapshot_dir: ${hydra:runtime.cwd}/submissions/
+  snapshot_dir: ${hydra:runtime.cwd}/submissions/ 
   seed: 42
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug/epoch_7_val_f1=73.21207127753885.pth
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation/epoch_14_val_f1=75.13905193701122.pth
   callbacks:
     early_stopping:
       monitor: val_f1
@@ -59,6 +59,8 @@ train:
       patience: 5
       best_result: 0.5
     wandb:
-      name: baseline_split
+      id: 284m2txp
+      name: split_data_aug_continuation
       tags:
         - val_split
+        - spatial_data_aug
