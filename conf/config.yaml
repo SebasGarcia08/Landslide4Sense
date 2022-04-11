@@ -59,4 +59,4 @@ train:
   gpu_id: 0
   snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models
   seed: 42
-  restore_from: ""
+  restore_from:
