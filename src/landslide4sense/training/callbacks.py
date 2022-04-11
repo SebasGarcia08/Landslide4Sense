@@ -123,10 +123,21 @@ class ModelCheckpointer(Callback):
         else:
             if not self.early_stopper.improved:
                 return
-            snapshot_name = f"epoch_{epoch}_{self.early_stopper.monitor}={self.early_stopper.best_result}.pth"
-        model_path = os.path.join(self.save_dir, snapshot_name)
-        logger.info(f"Saving checkpoint at: {model_path}")
+            rounded_best_res = round(self.early_stopper.best_result, 3)
+            snapshot_name = (
+                f"epoch_{epoch}_{self.early_stopper.monitor}={rounded_best_res}"
+            )
+
+        epoch_path = os.path.join(self.save_dir, snapshot_name)
+        os.makedirs(epoch_path, exist_ok=True)
+
+        model_path = os.path.join(epoch_path, "model.pth")
+        logger.info(f"Saving model checkpoint at: {model_path}")
         torch.save(self.trainer.model.state_dict(), model_path)
+
+        optimizer_path = os.path.join(epoch_path, "optimizer.pt")
+        logger.info(f"Saving optimizer checkpoint at: {optimizer_path}")
+        torch.save(self.trainer.optimizer.state_dict(), optimizer_path)
 
 
 @dataclass
