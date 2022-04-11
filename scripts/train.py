@@ -17,7 +17,7 @@ from landslide4sense.training.base_callbacks import Callback
 from landslide4sense.utils import import_name, set_deterministic
 from landslide4sense.training.callbacks import (
     EarlyStopping,
-    ModelCheckpointer,
+    Checkpointer,
     ProgressPrinter,
     WandbCallback,
 )
@@ -38,7 +38,7 @@ def setup_callbacks(cfg: Config) -> ty.List[Callback]:
 
     early_stopper = EarlyStopping(**cfg.train.callbacks.early_stopping)
 
-    model_checkpointer = ModelCheckpointer(
+    model_checkpointer = Checkpointer(
         os.path.join(cfg.train.snapshot_dir, wandb_callback.run.name), early_stopper
     )
 
@@ -138,7 +138,7 @@ def main(cfg: Config):
         model.parameters(),
         lr=cfg.train.learning_rate,
         weight_decay=cfg.train.weight_decay,
-        momentum=0.9
+        momentum=0.9,
     )
     cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
     train_loader, eval_sets = setup_datasets(cfg)
@@ -160,7 +160,7 @@ def main(cfg: Config):
         max_epochs=cfg.train.num_steps_stop // cfg.train.steps_per_epoch,
         steps_per_epoch=cfg.train.steps_per_epoch,
         callbacks=callbacks,
-        start_epoch=cfg.train.start_epoch
+        start_epoch=cfg.train.start_epoch,
     )
 
 

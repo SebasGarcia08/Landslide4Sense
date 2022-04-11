@@ -51,7 +51,6 @@ train:
   gpu_id: 0
   snapshot_dir: ${hydra:runtime.cwd}/submissions/ 
   seed: 42
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation/epoch_14_val_f1=75.13905193701122.pth
   callbacks:
     early_stopping:
       monitor: val_f1
@@ -59,7 +58,8 @@ train:
       patience: 5
       best_result: 0.5
     wandb:
-      name: split_data_aug_continuation
+      name: split_data_aug_continuation_sgd
       tags:
         - val_split
         - spatial_data_aug
+        - sgd_momentum
