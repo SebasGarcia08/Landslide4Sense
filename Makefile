@@ -1,6 +1,6 @@
 # Setup colab
 setup-colab:
-	cd /content/Landslide4Sense && git checkout develop && git pull origin develop
+	cd /content/Landslide4Sense && git checkout exps/dataug && git pull origin exps/dataug
 
 	mkdir /content/Landslide4Sense/data /content/Landslide4Sense/models /content/Landslide4Sense/submissions
 	
