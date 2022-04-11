@@ -8,8 +8,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 
-from landslide4sense.config import Config
-from landslide4sense.data import LandslideDataSet
+import albumentations as A
+
+from landslide4sense.config import Config, AugmentationConfig
+from landslide4sense.data import LandslideDataSet, Transformation
 from landslide4sense.training import ModelTrainer
 from landslide4sense.training.base_callbacks import Callback
 from landslide4sense.utils import import_name, set_deterministic
@@ -34,7 +36,7 @@ name_classes = ["Non-Landslide", "Landslide"]
 def setup_callbacks(cfg: Config) -> ty.List[Callback]:
     wandb_callback = WandbCallback(
         {
-            "config": cfg,
+            "config": dict(cfg),
             "project": "landslide4sense",
             "name": cfg.train.run_name,
             "tags": cfg.train.tags,
@@ -60,16 +62,42 @@ def setup_callbacks(cfg: Config) -> ty.List[Callback]:
     ]
 
 
+def setup_augmentations(
+    cfg: ty.Optional[AugmentationConfig],
+) -> ty.Optional[Transformation]:
+    logger.info("Setting up augmentations")
+    if cfg is None or cfg.transforms is None:
+        logger.info("No augmentations specified")
+        return None
+    transforms = []
+    for t in cfg.transforms:
+        logger.info(f"Instantiating {cfg.module}.{t['name']}...")
+        transform_cls = import_name(cfg.module, t["name"])
+        transforms.append(transform_cls(**t["args"]))
+    transforms = A.Compose(transforms)
+    return Transformation(transforms)
+
+
 def setup_datasets(
     cfg: Config,
 ) -> ty.Tuple[DataLoader[LandslideDataSet], ty.List[DataLoader[LandslideDataSet]]]:
+    transform = setup_augmentations(cfg.data.augmentation)
+    logger.info("Setting up datasets")
+
+    train_dataset = LandslideDataSet(
+        cfg.data.dir,
+        cfg.data.train_list,
+        max_iters=cfg.train.num_steps_stop * cfg.train.batch_size,
+        set="labeled",
+        transform=transform,
+    )
+
+    logger.info(
+        f"Training with {len(train_dataset)} samples from {cfg.data.train_list}"
+    )
+
     train_loader: DataLoader[LandslideDataSet] = DataLoader(
-        LandslideDataSet(
-            cfg.data.dir,
-            cfg.data.train_list,
-            max_iters=cfg.train.num_steps_stop * cfg.train.batch_size,
-            set="labeled",
-        ),
+        train_dataset,
         batch_size=cfg.train.batch_size,
         shuffle=True,
         num_workers=cfg.train.num_workers,
@@ -83,13 +111,13 @@ def setup_datasets(
         pin_memory=True,
     )
 
-    eval_sets: ty.List[DataLoader[LandslideDataSet]] = [
-        DataLoader(
-            LandslideDataSet(cfg.data.dir, eval_list_path, set="labeled"),
-            **eval_set_kwargs,
+    eval_sets: ty.List[DataLoader[LandslideDataSet]] = []
+    for name, eval_list_path in zip(cfg.data.eval_names, cfg.data.eval_lists_paths):
+        eval_set = LandslideDataSet(cfg.data.dir, eval_list_path, set="labeled")
+        logger.info(
+            f"Setting up {name} set with {len(eval_set)} samples from {eval_list_path}"
         )
-        for eval_list_path in cfg.data.eval_lists_paths
-    ]
+        eval_sets.append(DataLoader(eval_set, **eval_set_kwargs))
 
     return train_loader, eval_sets
 
@@ -109,6 +137,8 @@ def main(cfg: Config):
     input_size = (w, h)
 
     # Instantiate model
+    logger.info("Model setup")
+    logger.info(f"Instantiating {cfg.model.module}.{cfg.model.name}...")
     model_cls = import_name(cfg.model.module, cfg.model.name)
     model = model_cls(n_classes=cfg.model.num_classes)
     if cfg.train.restore_from:

@@ -1,8 +1,15 @@
 from dataclasses import dataclass
 import typing as ty
 
+
 @dataclass
-class Data:
+class AugmentationConfig:
+    module: str
+    transforms: ty.Optional[ty.List] = None
+
+
+@dataclass
+class DataConfig:
     """
     Arguments:
         dir: dataset path
@@ -15,10 +22,11 @@ class Data:
     eval_lists_paths: ty.List[str]
     eval_names: ty.List[str]
     test_list: str
+    augmentation: ty.Optional[AugmentationConfig]
 
 
 @dataclass
-class Model:
+class ModelConfig:
     """
     Arguments:
         input_size: width and height of input images
@@ -31,6 +39,7 @@ class Model:
     num_classes: int
     module: str
     name: str
+
 
 @dataclass
 class EarlyStoppingConfig:
@@ -47,8 +56,9 @@ class EarlyStoppingConfig:
     monitor: str
     best_result: float
 
+
 @dataclass
-class Train:
+class TrainConfig:
     """
     Arguments:
         batch_size: number of images in each batch
@@ -62,6 +72,7 @@ class Train:
         restore_from: restore from snapshot
         seed: random seed
     """
+
     run_name: str
     tags: ty.List[str]
     early_stopping: EarlyStoppingConfig
@@ -87,6 +98,6 @@ class Config:
         training: training configuration
     """
 
-    data: Data
-    model: Model
-    train: Train
+    data: DataConfig
+    model: ModelConfig
+    train: TrainConfig

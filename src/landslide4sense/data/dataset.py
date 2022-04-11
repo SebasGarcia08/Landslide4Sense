@@ -5,8 +5,11 @@ import h5py
 
 import typing as ty
 
+from .transformations import Transformation
+
 LabeledDatasetIterable = ty.Tuple[np.ndarray, np.ndarray, np.ndarray, str]
 UnlabeledDatasetIterable = ty.Tuple[np.ndarray, np.ndarray, str]
+
 
 class LandslideDataSet(Dataset):
     def __init__(
@@ -15,7 +18,9 @@ class LandslideDataSet(Dataset):
         list_path: str,
         max_iters: ty.Optional[int] = None,
         set: str = "label",
+        transform: ty.Optional[Transformation] = None,
     ):
+        self.transform = transform
         self.list_path = list_path
         self.mean = [
             -0.4914,
@@ -76,7 +81,9 @@ class LandslideDataSet(Dataset):
     def __len__(self) -> int:
         return len(self.files)
 
-    def __getitem__(self, index: int) -> ty.Union[LabeledDatasetIterable, UnlabeledDatasetIterable]:
+    def __getitem__(
+        self, index: int
+    ) -> ty.Union[LabeledDatasetIterable, UnlabeledDatasetIterable]:
         datafiles = self.files[index]
 
         if self.set == "labeled":
@@ -94,6 +101,9 @@ class LandslideDataSet(Dataset):
             for i in range(len(self.mean)):
                 image[i, :, :] -= self.mean[i]
                 image[i, :, :] /= self.std[i]
+
+            if self.transform:
+                image, label = self.transform(image, label)
 
             return image.copy(), label.copy(), np.array(size), name
 

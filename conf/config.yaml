@@ -8,6 +8,30 @@ data:
     - train
     - val
   test_list: ${hydra:runtime.cwd}/data/valid.txt
+  augmentation:
+    module: albumentations
+    transforms:
+      - name: HorizontalFlip
+        args:
+          p: 0.5
+      - name: VerticalFlip
+        args: 
+          p: 0.5
+      - name: RandomRotate90
+        args: 
+          p: 0.5
+      - name: Transpose
+        args:
+          p: 0.5 
+      - name: RandomSizedCrop
+        args:
+          min_max_height: [96, 96]
+          height: 128 
+          width: 128 
+          p: 0.5
+      - name: ShiftScaleRotate
+        args:
+          p: 0.5
 
 model:
   input_size: 128,128
