@@ -85,8 +85,8 @@ class TrainConfig:
     weight_decay: float
     gpu_id: int
     snapshot_dir: str
-    restore_from: str
     seed: int
+    restore_from: ty.Optional[str] = None
 
 
 @dataclass
