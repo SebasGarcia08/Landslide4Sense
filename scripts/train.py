@@ -34,18 +34,7 @@ name_classes = ["Non-Landslide", "Landslide"]
 
 
 def setup_callbacks(cfg: Config) -> ty.List[Callback]:
-<<<<<<< HEAD
-    wandb_callback = WandbCallback(
-        {
-            "config": dict(cfg),
-            "project": "landslide4sense",
-            "name": cfg.train.run_name,
-            "tags": cfg.train.tags,
-        }
-    )
-=======
     wandb_callback = WandbCallback({"config": cfg, **cfg.train.callbacks.wandb})
->>>>>>> 3b05588fed6e832fbc085062e78dbf31d2cceb4d
 
     early_stopper = EarlyStopping(**cfg.train.callbacks.early_stopping)
 
