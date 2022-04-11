@@ -109,7 +109,7 @@ class EarlyStopping(Callback):
 
 
 @dataclass
-class ModelCheckpointer(Callback):
+class Checkpointer(Callback):
     save_dir: str
     early_stopper: ty.Optional[EarlyStopping] = None
 
