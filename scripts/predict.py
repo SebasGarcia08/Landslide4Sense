@@ -25,6 +25,7 @@ name_classes = ["Non-Landslide", "Landslide"]
 @hydra.main(config_path="../conf", config_name="config")
 def main(cfg: Config):
     set_deterministic(cfg.train.seed)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
     snapshot_dir = cfg.train.snapshot_dir
@@ -41,10 +42,12 @@ def main(cfg: Config):
     model_cls = import_name(cfg.model.module, cfg.model.name)
     model = model_cls(n_classes=cfg.model.num_classes)
 
-    saved_state_dict = torch.load(cfg.train.restore_from)
+    saved_state_dict = torch.load(
+        cfg.train.restore_from, map_location=torch.device(device)
+    )
     model.load_state_dict(saved_state_dict)
 
-    if torch.cuda.is_available():
+    if device == "cuda":
         model = model.cuda()
     else:
         logger.warning("Could not load CUDA, trying to do inference with cpu...")
@@ -65,7 +68,7 @@ def main(cfg: Config):
     for index, batch in enumerate(test_loader):
         image, _, name = batch
         image = image.float()
-        if torch.cuda.is_available():
+        if device == "cuda":
             image = image.cuda()
         name = name[0].split(".")[0].split("/")[-1].replace("image", "mask")
         print(index + 1, "/", len(test_loader), ": Testing ", name)
