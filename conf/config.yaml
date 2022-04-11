@@ -49,8 +49,8 @@ train:
     mode: max
     patience: 5
     best_result: 0.5
-  steps_per_epoch: 500
-  batch_size: 32
+  steps_per_epoch: 160
+  batch_size: 100
   num_workers: 2
   learning_rate: 1e-3
   num_steps: 10000
