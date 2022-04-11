@@ -1,4 +1,6 @@
 import os
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,7 +17,7 @@ from hydra.core.config_store import ConfigStore
 
 cs = ConfigStore.instance()
 cs.store(name="config", node=Config)
-
+logger = logging.getLogger(__name__)
 
 name_classes = ["Non-Landslide", "Landslide"]
 
@@ -42,7 +44,10 @@ def main(cfg: Config):
     saved_state_dict = torch.load(cfg.train.restore_from)
     model.load_state_dict(saved_state_dict)
 
-    model = model.cuda()
+    if torch.cuda.is_available():
+        model = model.cuda()
+    else:
+        logger.warning("Could not load CUDA, trying to do inference with cpu...")
 
     test_loader = data.DataLoader(
         LandslideDataSet(cfg.data.dir, cfg.data.test_list, set="unlabeled"),
@@ -59,7 +64,9 @@ def main(cfg: Config):
 
     for index, batch in enumerate(test_loader):
         image, _, name = batch
-        image = image.float().cuda()
+        image = image.float()
+        if torch.cuda.is_available():
+            image = image.cuda()
         name = name[0].split(".")[0].split("/")[-1].replace("image", "mask")
         print(index + 1, "/", len(test_loader), ": Testing ", name)
 

@@ -2,15 +2,12 @@ from dataclasses import dataclass
 import typing as ty
 
 
-<<<<<<< HEAD
 @dataclass
 class AugmentationConfig:
     module: str
     transforms: ty.Optional[ty.List] = None
 
 
-=======
->>>>>>> 3b05588fed6e832fbc085062e78dbf31d2cceb4d
 @dataclass
 class DataConfig:
     """
@@ -60,8 +57,6 @@ class EarlyStoppingConfig:
     best_result: float
 
 
-<<<<<<< HEAD
-=======
 @dataclass
 class WandBConfig:
     name: str
@@ -78,7 +73,6 @@ class CallbacksConfig:
     wandb: WandBConfig
 
 
->>>>>>> 3b05588fed6e832fbc085062e78dbf31d2cceb4d
 @dataclass
 class TrainConfig:
     """
@@ -108,10 +102,7 @@ class TrainConfig:
     gpu_id: int
     snapshot_dir: str
     seed: int
-<<<<<<< HEAD
-=======
     callbacks: CallbacksConfig
->>>>>>> 3b05588fed6e832fbc085062e78dbf31d2cceb4d
     restore_from: ty.Optional[str] = None
 
 
