@@ -69,7 +69,9 @@ class ModelTrainer(Trainer):
         F1 = np.zeros((self.num_classes, 1))
 
         for _, batch in tqdm(
-            enumerate(eval_set), desc=f"Evaluating on {eval_name}...", total=len(eval_set)
+            enumerate(eval_set),
+            desc=f"Evaluating on {eval_name}...",
+            total=len(eval_set),
         ):
             image, label, _, name = batch
             label = label.squeeze().numpy()
