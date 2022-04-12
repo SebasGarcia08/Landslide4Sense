@@ -7,7 +7,7 @@ transforms = A.Compose(
     [
         A.OneOf(
             [
-                A.RandomSizedCrop(min_max_height=(50, 101), height=h, width=w, p=0.5),
+                A.RandomSizedCrop(min_max_height=(64, 64), height=h, width=w, p=0.5),
                 A.PadIfNeeded(min_height=h, min_width=w, p=0.5),
             ],
             p=1,
