@@ -19,6 +19,7 @@ class DataConfig:
 
     dir: str
     train_list: str
+    input_size: ty.Tuple[int, int]
     eval_lists_paths: ty.List[str]
     eval_names: ty.List[str]
     test_list: str
@@ -35,10 +36,10 @@ class ModelConfig:
         name: model name in given module
     """
 
-    input_size: str
-    num_classes: int
     module: str
     name: str
+    args: ty.Dict
+    restore_from: ty.Optional[str] = None
 
 
 @dataclass
@@ -74,6 +75,21 @@ class CallbacksConfig:
 
 
 @dataclass
+class OptimizerConfig:
+    name: str
+    module: str
+    args: ty.Dict
+    restore_from: ty.Optional[str] = None
+
+
+@dataclass
+class LossConfig:
+    module: str
+    name: str
+    args: ty.Dict
+
+
+@dataclass
 class TrainConfig:
     """
     Arguments:
@@ -95,15 +111,12 @@ class TrainConfig:
     steps_per_epoch: int
     batch_size: int
     num_workers: int
-    learning_rate: float
     num_steps: int
     num_steps_stop: int
-    weight_decay: float
     gpu_id: int
     snapshot_dir: str
     seed: int
     callbacks: CallbacksConfig
-    restore_from: ty.Optional[str] = None
 
 
 @dataclass
@@ -117,4 +130,6 @@ class Config:
 
     data: DataConfig
     model: ModelConfig
+    optimizer: OptimizerConfig
+    loss: LossConfig
     train: TrainConfig

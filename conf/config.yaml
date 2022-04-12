@@ -8,6 +8,7 @@ data:
     - train
     - val
   test_list: ${hydra:runtime.cwd}/data/valid.txt
+  input_size: [128, 128]
   augmentation:
     module: albumentations
     transforms:
@@ -18,7 +19,7 @@ data:
         args: 
           p: 0.5
       - name: RandomRotate90
-        args: 
+        args:
           p: 0.5
       - name: Transpose
         args:
@@ -34,22 +35,36 @@ data:
           p: 0.5
 
 model:
-  input_size: 128,128
-  num_classes: 2
   module: landslide4sense.models
   name: Unet
+  restore_from:  /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation_sgd/epoch_2_val_f1=48.092/model.pth 
+  args:
+    n_classes: 2
+
+optimizer:
+  module: torch.optim
+  name: SGD
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation_sgd/epoch_2_val_f1=48.092/optimizer.pth
+  args:
+    lr: 1e-3
+    weight_decay: 5e-4
+    momentum: 0.9
+
+loss:
+  module: torch.nn
+  name: CrossEntropyLoss
+  args:
+    ignore_index: 255
 
 train:
   start_epoch: 0
   steps_per_epoch: 34
   batch_size: 100
   num_workers: 2
-  learning_rate: 1e-3
   num_steps: 10000
   num_steps_stop: 10000
-  weight_decay: 5e-4
   gpu_id: 0
-  snapshot_dir: ${hydra:runtime.cwd}/submissions/ 
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models
   seed: 42
   callbacks:
     early_stopping:

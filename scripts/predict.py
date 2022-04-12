@@ -32,7 +32,7 @@ def main(cfg: Config):
     if os.path.exists(snapshot_dir) == False:
         os.makedirs(snapshot_dir)
 
-    w, h = map(int, cfg.model.input_size.split(","))
+    w, h = cfg.data.input_size
     input_size = (w, h)
 
     cudnn.enabled = True
@@ -40,10 +40,10 @@ def main(cfg: Config):
 
     # Create network
     model_cls = import_name(cfg.model.module, cfg.model.name)
-    model = model_cls(n_classes=cfg.model.num_classes)
+    model = model_cls(**cfg.model.args)
 
     saved_state_dict = torch.load(
-        cfg.train.restore_from, map_location=torch.device(device)
+        cfg.model.restore_from, map_location=torch.device(device)
     )
     model.load_state_dict(saved_state_dict)
 

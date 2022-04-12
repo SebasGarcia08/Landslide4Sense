@@ -110,6 +110,39 @@ def setup_datasets(
     return train_loader, eval_sets
 
 
+def setup_model(cfg: Config) -> nn.Module:
+    # Instantiate model
+    logger.info("Model setup")
+    logger.info(f"Instantiating {cfg.model.module}.{cfg.model.name}...")
+    model_cls = import_name(cfg.model.module, cfg.model.name)
+    model = model_cls(n_classes=cfg.model.num_classes)
+    if cfg.model.restore_from:
+        logger.info(f"Restoring moddel from checkpoint: {cfg.model.restore_from}...")
+        model.load_state_dict(torch.load(cfg.model.restore_from))
+    return model
+
+
+def setup_optimizer(cfg: Config, model: nn.Module) -> optim.Optimizer:
+    logger.info("Optimizer setup")
+    logger.info(f"Instantiating {cfg.optimizer.module}.{cfg.optimizer.name}...")
+    optimizer_cls = import_name(cfg.optimizer.module, cfg.optimizer.name)
+    optimizer = optimizer_cls(model.parameters(), **cfg.optimizer.args)
+    if cfg.optimizer.restore_from:
+        logger.info(
+            f"Restoring optimizer from checkpoint: {cfg.optimizer.restore_from}..."
+        )
+        optimizer.load_state_dict(torch.load(cfg.optimizer.restore_from))
+    return optimizer
+
+
+def setup_loss_fn(cfg: Config) -> nn.Module:
+    logger.info("Loss function setup")
+    logger.info(f"Instantiating {cfg.loss.module}.{cfg.loss.name}...")
+    loss_fn_cls = import_name(cfg.loss.module, cfg.loss.name)
+    loss_fn = loss_fn_cls(**cfg.loss.args)
+    return loss_fn
+
+
 @hydra.main(config_path="../conf", config_name="config")
 def main(cfg: Config):
     set_deterministic(cfg.train.seed)
@@ -121,38 +154,19 @@ def main(cfg: Config):
         cudnn.enabled = True
         cudnn.benchmark = True
 
-    w, h = map(int, cfg.model.input_size.split(","))
-    input_size = (w, h)
-
-    # Instantiate model
-    logger.info("Model setup")
-    logger.info(f"Instantiating {cfg.model.module}.{cfg.model.name}...")
-    model_cls = import_name(cfg.model.module, cfg.model.name)
-    model = model_cls(n_classes=cfg.model.num_classes)
-    if cfg.train.restore_from:
-        logger.info(f"Restoring moddel from checkpoint: {cfg.train.restore_from}...")
-        saved_state_dict = torch.load(cfg.train.restore_from)
-        model.load_state_dict(saved_state_dict)
-
-    optimizer = optim.SGD(
-        model.parameters(),
-        lr=cfg.train.learning_rate,
-        weight_decay=cfg.train.weight_decay,
-        momentum=0.9,
-    )
-    cross_entropy_loss = nn.CrossEntropyLoss(ignore_index=255)
+    model = setup_model(cfg)
+    optimizer = setup_optimizer(cfg, model)
+    loss_fn = setup_loss_fn(cfg)
     train_loader, eval_sets = setup_datasets(cfg)
     callbacks = setup_callbacks(cfg)
 
     trainer = ModelTrainer(
         model,
         optimizer,
-        cross_entropy_loss,
+        loss_fn,
         train_set=train_loader,
         eval_sets=eval_sets,
         eval_names=cfg.data.eval_names,
-        input_size=input_size,
-        num_classes=cfg.model.num_classes,
         device=device,
     )
 
