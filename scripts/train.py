@@ -110,7 +110,7 @@ def setup_model(cfg: Config) -> nn.Module:
     logger.info("Model setup")
     logger.info(f"Instantiating {cfg.model.module}.{cfg.model.name}...")
     model_cls = import_name(cfg.model.module, cfg.model.name)
-    model = model_cls(n_classes=cfg.model.num_classes)
+    model = model_cls(**cfg.model.args)
     if cfg.model.restore_from:
         logger.info(f"Restoring moddel from checkpoint: {cfg.model.restore_from}...")
         model.load_state_dict(torch.load(cfg.model.restore_from))

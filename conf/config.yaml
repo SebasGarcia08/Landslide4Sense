@@ -50,6 +50,7 @@ train:
       patience: 5
       best_result: 0.5
     wandb:
+      group: Unet
       tags:
         - val_split
         - spatial_data_aug
