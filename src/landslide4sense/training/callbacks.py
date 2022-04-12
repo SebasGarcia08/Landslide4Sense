@@ -153,7 +153,9 @@ class WandbCallback(Callback):
         wandb.log(logs)
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
-        wandb.log(logs)
+        if logs is None or len(logs) == 0:
+            return
+        wandb.log(logs, commit=True)
 
     def on_train_end(self, logs: OptionalDict = None) -> None:
         self.run.finish()

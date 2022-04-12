@@ -21,11 +21,10 @@ model:
 
 optimizer:
   module: torch.optim
-  name: SGD
+  name: AdamW
   args:
     lr: 1e-3
     weight_decay: 5e-4
-    momentum: 0.9
 
 loss:
   module: torch.nn
