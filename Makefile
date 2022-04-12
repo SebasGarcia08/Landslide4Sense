@@ -10,7 +10,6 @@ setup-data:
 	
 	cp /content/drive/MyDrive/data_science_projects/landslide4sense-2022/data/*.txt /content/Landslide4Sense/data/ 
 
-	cp -r /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/* /content/Landslide4Sense/models/ 
 	
 setup-code: 
 	pip install gpustat
