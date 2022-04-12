@@ -10,41 +10,18 @@ data:
   test_list: ${hydra:runtime.cwd}/data/valid.txt
   input_size: [128, 128]
   augmentation:
-    module: albumentations
-    transforms:
-      - name: HorizontalFlip
-        args:
-          p: 0.5
-      - name: VerticalFlip
-        args: 
-          p: 0.5
-      - name: RandomRotate90
-        args:
-          p: 0.5
-      - name: Transpose
-        args:
-          p: 0.5 
-      - name: RandomSizedCrop
-        args:
-          min_max_height: [96, 96]
-          height: 128 
-          width: 128 
-          p: 0.5
-      - name: ShiftScaleRotate
-        args:
-          p: 0.5
+    module: landslide4sense.data.augmentations
+    name: transforms
 
 model:
   module: landslide4sense.models
   name: Unet
-  restore_from:  /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation_sgd/epoch_2_val_f1=48.092/model.pth 
   args:
     n_classes: 2
 
 optimizer:
   module: torch.optim
   name: SGD
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug_continuation_sgd/epoch_2_val_f1=48.092/optimizer.pth
   args:
     lr: 1e-3
     weight_decay: 5e-4
@@ -73,8 +50,8 @@ train:
       patience: 5
       best_result: 0.5
     wandb:
-      name: split_data_aug_continuation_sgd
       tags:
         - val_split
         - spatial_data_aug
         - sgd_momentum
+        - non_spatial_data_aug

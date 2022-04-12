@@ -54,15 +54,10 @@ def setup_augmentations(
     cfg: ty.Optional[AugmentationConfig],
 ) -> ty.Optional[Transformation]:
     logger.info("Setting up augmentations")
-    if cfg is None or cfg.transforms is None:
+    if cfg is None:
         logger.info("No augmentations specified")
         return None
-    transforms = []
-    for t in cfg.transforms:
-        logger.info(f"Instantiating {cfg.module}.{t['name']}...")
-        transform_cls = import_name(cfg.module, t["name"])
-        transforms.append(transform_cls(**t["args"]))
-    transforms = A.Compose(transforms)
+    transforms = import_name(cfg.module, cfg.name)
     return Transformation(transforms)
 
 

@@ -5,7 +5,7 @@ import typing as ty
 @dataclass
 class AugmentationConfig:
     module: str
-    transforms: ty.Optional[ty.List] = None
+    name: str
 
 
 @dataclass
@@ -23,7 +23,7 @@ class DataConfig:
     eval_lists_paths: ty.List[str]
     eval_names: ty.List[str]
     test_list: str
-    augmentation: ty.Optional[AugmentationConfig]
+    augmentation: ty.Optional[AugmentationConfig] = None
 
 
 @dataclass
