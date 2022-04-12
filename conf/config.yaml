@@ -14,6 +14,7 @@ data:
     name: transforms
 
 model:
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/pretty-pond-23/epoch_15_val_f1=73.47/model.pth
   module: landslide4sense.models
   name: Unet
   args:
@@ -41,7 +42,7 @@ train:
   num_steps: 10000
   num_steps_stop: 10000
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/pretty-pond-23/
   seed: 42
   callbacks:
     early_stopping:
