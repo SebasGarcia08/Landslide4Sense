@@ -66,6 +66,7 @@ class WandBConfig:
     group: ty.Optional[str] = None
     id: ty.Optional[str] = None
     job_type: ty.Optional[str] = "train"
+    resume: ty.Optional[bool] = None
 
 
 @dataclass

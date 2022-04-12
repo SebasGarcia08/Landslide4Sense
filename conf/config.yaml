@@ -21,6 +21,7 @@ model:
     n_classes: 2
 
 optimizer:
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/pretty-pond-23/epoch_15_val_f1=73.47/optimizer.pt
   module: torch.optim
   name: SGD
   args:
@@ -42,16 +43,18 @@ train:
   num_steps: 10000
   num_steps_stop: 10000
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/pretty-pond-23/
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
   seed: 42
   callbacks:
     early_stopping:
       monitor: val_f1
       mode: max
-      patience: 5
-      best_result: 0.5
+      patience: 10
+      best_result: 0.7
     wandb:
       group: Unet
+      resume: true
+      name: pretty-pond-23
       tags:
         - val_split
         - spatial_data_aug
