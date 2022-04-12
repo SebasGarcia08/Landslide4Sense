@@ -10,7 +10,7 @@ transforms = A.Compose(
                 A.RandomSizedCrop(min_max_height=(64, 64), height=h, width=w, p=0.5),
                 A.PadIfNeeded(min_height=h, min_width=w, p=0.5),
             ],
-            p=1,
+            p=0.5,
         ),
         A.VerticalFlip(p=0.5),
         A.HorizontalFlip(p=0.5),
@@ -25,10 +25,10 @@ transforms = A.Compose(
                 A.GridDistortion(p=0.5),
                 A.OpticalDistortion(distort_limit=2, shift_limit=0.5, p=1),
             ],
-            p=0.8,
+            p=0.5,
         ),
-        A.CLAHE(p=0.8),
-        A.RandomBrightnessContrast(p=0.8),
-        A.RandomGamma(p=0.8),
+        A.CLAHE(p=0.5),
+        A.RandomBrightnessContrast(p=0.5),
+        A.RandomGamma(p=0.5),
     ]
 )
