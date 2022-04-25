@@ -14,18 +14,18 @@ data:
     name: transforms
 
 model:
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/pretty-pond-23/epoch_15_val_f1=73.47/model.pth
+  restore_from:
   module: landslide4sense.models
   name: Unet
   args:
     n_classes: 2
 
 optimizer:
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/pretty-pond-23/epoch_15_val_f1=73.47/optimizer.pt
+  restore_from:
   module: torch.optim
   name: SGD
   args:
-    lr: 0.01
+    lr: 0.02
     weight_decay: 5e-4
     momentum: 0.9
 
@@ -34,6 +34,7 @@ loss:
   name: CrossEntropyLoss
   args:
     ignore_index: 255
+    weight: [1, 1.5]
 
 train:
   start_epoch: 0

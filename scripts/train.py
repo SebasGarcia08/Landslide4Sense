@@ -144,7 +144,11 @@ def setup_loss_fn(cfg: Config) -> nn.Module:
     logger.info("Loss function setup")
     logger.info(f"Instantiating {cfg.loss.module}.{cfg.loss.name}...")
     loss_fn_cls = import_name(cfg.loss.module, cfg.loss.name)
-    loss_fn = loss_fn_cls(**cfg.loss.args)
+    loss_args = dict(cfg.loss.args.copy())
+    if "weight" in loss_args:
+       loss_args["weight"] = torch.tensor(loss_args["weight"], device=device).float()
+    loss_fn = loss_fn_cls(**loss_args)
+
     return loss_fn
 
 
