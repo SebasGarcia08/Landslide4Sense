@@ -15,30 +15,29 @@ data:
 
 model:
   restore_from:
-  module: landslide4sense.models
-  name: Unet
+  module: segmentation_models
+  name: UnetPlusPlus
   args:
-    n_classes: 2
+    in_channels: 14
+    classes: 2
 
 optimizer:
   restore_from:
   module: torch.optim
-  name: SGD
+  name: Adam
   args:
-    lr: 0.02
-    weight_decay: 5e-4
-    momentum: 0.9
+    lr:  0.001
+    weight_decay: 0.0005
 
 loss:
   module: torch.nn
   name: CrossEntropyLoss
   args:
     ignore_index: 255
-    weight: [1, 1.5]
 
 train:
   start_epoch: 0
-  steps_per_epoch: 34
+  steps_per_epoch: 160
   batch_size: 100
   num_workers: 2
   num_steps: 10000
@@ -51,11 +50,8 @@ train:
       monitor: val_f1
       mode: max
       patience: 10
-      best_result: 0.7
     wandb:
-      group: Unet
-      resume: true
-      name: pretty-pond-23
+      group: Unet++
       tags:
         - val_split
         - spatial_data_aug
