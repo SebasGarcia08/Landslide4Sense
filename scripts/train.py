@@ -35,7 +35,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def setup_callbacks(cfg: Config) -> ty.List[Callback]:
-    wandb_callback = WandbCallback({"config": cfg, **cfg.train.callbacks.wandb})
+    wandb_callback = WandbCallback({"config": dict(cfg), **cfg.train.callbacks.wandb})
 
     early_stopper = EarlyStopping(**cfg.train.callbacks.early_stopping)
 
@@ -115,8 +115,7 @@ def setup_model(cfg: Config) -> nn.Module:
     if cfg.model.restore_from:
         logger.info(f"Restoring moddel from checkpoint: {cfg.model.restore_from}...")
         loaded_state_dict = torch.load(
-            cfg.model.restore_from, 
-            map_location=torch.device(device)   
+            cfg.model.restore_from, map_location=torch.device(device)
         )
         model.load_state_dict(loaded_state_dict)
     return model
@@ -132,8 +131,7 @@ def setup_optimizer(cfg: Config, model: nn.Module) -> optim.Optimizer:
             f"Restoring optimizer from checkpoint: {cfg.optimizer.restore_from}..."
         )
         loaded_state_dict = torch.load(
-            cfg.optimizer.restore_from, 
-            map_location=torch.device(device)
+            cfg.optimizer.restore_from, map_location=torch.device(device)
         )
         optimizer.load_state_dict(loaded_state_dict)
     optimizer_to(optimizer, device)
@@ -146,7 +144,7 @@ def setup_loss_fn(cfg: Config) -> nn.Module:
     loss_fn_cls = import_name(cfg.loss.module, cfg.loss.name)
     loss_args = dict(cfg.loss.args.copy())
     if "weight" in loss_args:
-       loss_args["weight"] = torch.tensor(loss_args["weight"], device=device).float()
+        loss_args["weight"] = torch.tensor(loss_args["weight"], device=device).float()
     loss_fn = loss_fn_cls(**loss_args)
 
     return loss_fn
