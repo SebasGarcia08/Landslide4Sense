@@ -14,7 +14,7 @@ data:
     name: transforms
 
 model:
-  restore_from:
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36/epoch_5_val_f1=72.615/model.pth
   module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
@@ -22,7 +22,7 @@ model:
     classes: 2
 
 optimizer:
-  restore_from:
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36/epoch_5_val_f1=72.615/optimizer.pt
   module: torch.optim
   name: Adam
   args:
@@ -36,14 +36,14 @@ loss:
     ignore_index: 255
 
 train:
-  start_epoch: 0
+  start_epoch: 11
   steps_per_epoch: 160
   batch_size: 100
   num_workers: 2
   num_steps: 10000
   num_steps_stop: 10000
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36-continuation
   seed: 42
   callbacks:
     early_stopping:
