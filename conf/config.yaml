@@ -50,6 +50,7 @@ train:
       monitor: val_f1
       mode: max
       patience: 10
+      best_result: 0.5
     wandb:
       group: Unet++
       tags:
