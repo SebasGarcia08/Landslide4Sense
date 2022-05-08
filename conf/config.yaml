@@ -15,7 +15,7 @@ data:
 
 model:
   restore_from:
-  module: segmentation_models
+  module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
     in_channels: 14
