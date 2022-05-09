@@ -89,7 +89,7 @@ def setup_datasets(
     )
 
     eval_set_kwargs = dict(
-        batch_size=1,
+        batch_size=cfg.train.batch_size,
         shuffle=False,
         num_workers=cfg.train.num_workers,
         pin_memory=True,
