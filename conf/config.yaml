@@ -14,7 +14,7 @@ data:
     name: transforms
 
 model:
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36/epoch_5_val_f1=72.615/model.pth
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36-continuation/eager-lion-37/epoch_13_val_f1=74.757/model.pth
   module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
@@ -43,7 +43,7 @@ train:
   num_steps: 10000
   num_steps_stop: 10000
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/misunderstood-sound-36-continuation
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/misunderstood-sound-36-continuation/
   seed: 42
   callbacks:
     early_stopping:
