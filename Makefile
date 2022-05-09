@@ -16,6 +16,8 @@ setup-code:
 	
 	pip install -e "/content/Landslide4Sense[dev]"
 
+	sudo apt-get install htop
+
 # Compile and install exact python packages
 poetry:
 	pip install poetry
