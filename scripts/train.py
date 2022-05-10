@@ -14,7 +14,7 @@ from landslide4sense.config import Config, AugmentationConfig
 from landslide4sense.data import LandslideDataSet, Transformation
 from landslide4sense.training import ModelTrainer
 from landslide4sense.training.base_callbacks import Callback
-from landslide4sense.utils import import_name, set_deterministic
+from landslide4sense.utils import import_name, set_deterministic, optimizer_to
 from landslide4sense.training.callbacks import (
     EarlyStopping,
     Checkpointer,
@@ -31,10 +31,11 @@ cs = ConfigStore.instance()
 cs.store(name="config", node=Config)
 
 name_classes = ["Non-Landslide", "Landslide"]
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def setup_callbacks(cfg: Config) -> ty.List[Callback]:
-    wandb_callback = WandbCallback({"config": cfg, **cfg.train.callbacks.wandb})
+    wandb_callback = WandbCallback({"config": dict(cfg), **cfg.train.callbacks.wandb})
 
     early_stopper = EarlyStopping(**cfg.train.callbacks.early_stopping)
 
@@ -88,7 +89,7 @@ def setup_datasets(
     )
 
     eval_set_kwargs = dict(
-        batch_size=1,
+        batch_size=cfg.train.batch_size,
         shuffle=False,
         num_workers=cfg.train.num_workers,
         pin_memory=True,
@@ -110,10 +111,13 @@ def setup_model(cfg: Config) -> nn.Module:
     logger.info("Model setup")
     logger.info(f"Instantiating {cfg.model.module}.{cfg.model.name}...")
     model_cls = import_name(cfg.model.module, cfg.model.name)
-    model = model_cls(n_classes=cfg.model.num_classes)
+    model = model_cls(**cfg.model.args)
     if cfg.model.restore_from:
         logger.info(f"Restoring moddel from checkpoint: {cfg.model.restore_from}...")
-        model.load_state_dict(torch.load(cfg.model.restore_from))
+        loaded_state_dict = torch.load(
+            cfg.model.restore_from, map_location=torch.device(device)
+        )
+        model.load_state_dict(loaded_state_dict)
     return model
 
 
@@ -121,12 +125,16 @@ def setup_optimizer(cfg: Config, model: nn.Module) -> optim.Optimizer:
     logger.info("Optimizer setup")
     logger.info(f"Instantiating {cfg.optimizer.module}.{cfg.optimizer.name}...")
     optimizer_cls = import_name(cfg.optimizer.module, cfg.optimizer.name)
-    optimizer = optimizer_cls(model.parameters(), **cfg.optimizer.args)
+    optimizer: optim.Optimizer = optimizer_cls(model.parameters(), **cfg.optimizer.args)
     if cfg.optimizer.restore_from:
         logger.info(
             f"Restoring optimizer from checkpoint: {cfg.optimizer.restore_from}..."
         )
-        optimizer.load_state_dict(torch.load(cfg.optimizer.restore_from))
+        loaded_state_dict = torch.load(
+            cfg.optimizer.restore_from, map_location=torch.device(device)
+        )
+        optimizer.load_state_dict(loaded_state_dict)
+    optimizer_to(optimizer, device)
     return optimizer
 
 
@@ -134,7 +142,11 @@ def setup_loss_fn(cfg: Config) -> nn.Module:
     logger.info("Loss function setup")
     logger.info(f"Instantiating {cfg.loss.module}.{cfg.loss.name}...")
     loss_fn_cls = import_name(cfg.loss.module, cfg.loss.name)
-    loss_fn = loss_fn_cls(**cfg.loss.args)
+    loss_args = dict(cfg.loss.args.copy())
+    if "weight" in loss_args:
+        loss_args["weight"] = torch.tensor(loss_args["weight"], device=device).float()
+    loss_fn = loss_fn_cls(**loss_args)
+
     return loss_fn
 
 
@@ -142,7 +154,6 @@ def setup_loss_fn(cfg: Config) -> nn.Module:
 def main(cfg: Config):
     set_deterministic(cfg.train.seed)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     if device == "cuda":
         os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)

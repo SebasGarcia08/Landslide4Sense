@@ -60,12 +60,13 @@ class EarlyStoppingConfig:
 
 @dataclass
 class WandBConfig:
-    name: str
-    tags: ty.List[str]
+    name: ty.Optional[str] = None
+    tags: ty.Optional[ty.List[str]] = None
     project: str = "landslide4sense"
     group: ty.Optional[str] = None
     id: ty.Optional[str] = None
     job_type: ty.Optional[str] = "train"
+    resume: ty.Optional[bool] = None
 
 
 @dataclass

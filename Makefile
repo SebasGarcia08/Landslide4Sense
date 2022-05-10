@@ -1,5 +1,5 @@
 # Setup colab
-setup-colab:
+setup-data:
 	cd /content/Landslide4Sense && git checkout exps/dataug && git pull origin exps/dataug
 
 	mkdir /content/Landslide4Sense/data /content/Landslide4Sense/models /content/Landslide4Sense/submissions
@@ -10,11 +10,13 @@ setup-colab:
 	
 	cp /content/drive/MyDrive/data_science_projects/landslide4sense-2022/data/*.txt /content/Landslide4Sense/data/ 
 
-	cp -r /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/* /content/Landslide4Sense/models/ 
 	
+setup-code: 
 	pip install gpustat
 	
 	pip install -e "/content/Landslide4Sense[dev]"
+
+	sudo apt-get install htop
 
 # Compile and install exact python packages
 poetry:

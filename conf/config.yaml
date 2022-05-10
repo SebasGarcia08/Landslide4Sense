@@ -1,12 +1,10 @@
 data:
   dir: ${hydra:runtime.cwd}/data/
-  train_list: ${hydra:runtime.cwd}/data/train_split_train.txt
+  train_list: ${hydra:runtime.cwd}/data/train.txt
   eval_lists_paths:
-    - ${hydra:runtime.cwd}/data/train_split_train.txt
-    - ${hydra:runtime.cwd}/data/train_split_val.txt
+    - ${hydra:runtime.cwd}/data/train.txt
   eval_names:
     - train
-    - val
   test_list: ${hydra:runtime.cwd}/data/valid.txt
   input_size: [128, 128]
   augmentation:
@@ -14,42 +12,46 @@ data:
     name: transforms
 
 model:
-  module: landslide4sense.models
-  name: Unet
+  restore_from: 
+  module: segmentation_models_pytorch
+  name: UnetPlusPlus
   args:
-    n_classes: 2
+    in_channels: 14
+    classes: 2
 
 optimizer:
+  restore_from:
   module: torch.optim
-  name: SGD
+  name: Adam
   args:
-    lr: 1e-3
-    weight_decay: 5e-4
-    momentum: 0.9
+    lr:  0.001
+    weight_decay: 0.0005
 
 loss:
-  module: torch.nn
-  name: CrossEntropyLoss
+  module: segmentation_models_pytorch.losses
+  name: DiceLoss
   args:
     ignore_index: 255
+    mode: multiclass
 
 train:
   start_epoch: 0
-  steps_per_epoch: 34
-  batch_size: 100
+  steps_per_epoch: 125
+  batch_size: 128
   num_workers: 2
   num_steps: 10000
   num_steps_stop: 10000
   gpu_id: 0
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/
   seed: 42
   callbacks:
     early_stopping:
       monitor: val_f1
       mode: max
-      patience: 5
+      patience: 10
       best_result: 0.5
     wandb:
+      group: Unet++
       tags:
         - val_split
         - spatial_data_aug
