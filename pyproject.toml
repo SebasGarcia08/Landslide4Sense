@@ -21,6 +21,7 @@ jupyter = "^1.0.0"
 hydra-core = "^1.1.1"
 tqdm = "^4.64.0"
 segmentation-models-pytorch = "^0.2.1"
+numba = "^0.55.1"
 
 [tool.poetry.dev-dependencies]
 pip-tools = "^6.6.0"
