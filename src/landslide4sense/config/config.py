@@ -121,6 +121,12 @@ class TrainConfig:
 
 
 @dataclass
+class PredictConfig:
+    snapshot_dir: str
+    threshold: float
+
+
+@dataclass
 class Config:
     """
     Arguments:
@@ -134,3 +140,4 @@ class Config:
     optimizer: OptimizerConfig
     loss: LossConfig
     train: TrainConfig
+    predict: PredictConfig

@@ -12,12 +12,11 @@ data:
     name: transforms
 
 model:
-  restore_from: 
-  module: segmentation_models_pytorch
-  name: UnetPlusPlus
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/split_data_aug/epoch_7_val_f1=73.21207127753885.pth
+  module: landslide4sense.models
+  name: Unet
   args:
-    in_channels: 14
-    classes: 2
+    n_classes: 2
 
 optimizer:
   restore_from:
@@ -57,3 +56,7 @@ train:
         - spatial_data_aug
         - sgd_momentum
         - non_spatial_data_aug
+
+predict:
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/split_data_aug@0.407/
+  threshold: 0.40707071

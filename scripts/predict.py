@@ -28,7 +28,7 @@ def main(cfg: Config):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
-    snapshot_dir = cfg.train.snapshot_dir
+    snapshot_dir = cfg.predict.snapshot_dir
     if os.path.exists(snapshot_dir) == False:
         os.makedirs(snapshot_dir)
 
@@ -75,8 +75,8 @@ def main(cfg: Config):
 
         with torch.no_grad():
             pred = model(image)
-
-        _, pred = torch.max(interp(F.softmax(pred, dim=1)).detach(), 1)
+        pred = interp(F.softmax(pred, dim=1)).detach()
+        pred = (pred[:, 1, :, :] > cfg.predict.threshold)
         pred = pred.squeeze().data.cpu().numpy().astype("uint8")
         with h5py.File(snapshot_dir + name + ".h5", "w") as hf:
             hf.create_dataset("mask", data=pred)
