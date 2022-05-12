@@ -12,7 +12,7 @@ data:
     name: transforms
 
 model:
-  restore_from: 
+  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/lyric-rain-44/epoch_14_train_f1=73.783/model.pth 
   module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
@@ -59,5 +59,5 @@ train:
         - non_spatial_data_aug
 
 predict:
-  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/quiet-salad-43@0.5/
-  threshold: 0.5
+  snapshot_dir: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/predictions/lyric-rain-44/
+  threshold: 0.1
