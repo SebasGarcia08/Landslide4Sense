@@ -35,20 +35,21 @@ loss:
   module: landslide4sense.losses
   name: Sum
   args:
-    - module: landslide4sense.losses
-      name: LogCoshTverskyLoss
-      args:
-        alpha: 0.7 # FP
-        beta: 0.3 # FN
-        ignore_index: 255
-        mode: multiclass
-    - module: segmentation_models_pytorch.losses
-      name: FocalLoss
-      args:
-        alpha: 0.5 # Prior probability of having positive value in target.
-        gamma: 0.2 # focal strength
-        ignore_index: 255
-        mode: multiclass
+    losses_cfg:
+      - module: landslide4sense.losses
+        name: LogCoshTverskyLoss
+        args:
+          alpha: 0.7 # FP
+          beta: 0.3 # FN
+          ignore_index: 255
+          mode: multiclass
+      - module: segmentation_models_pytorch.losses
+        name: FocalLoss
+        args:
+          alpha: 0.5 # Prior probability of having positive value in target.
+          gamma: 0.2 # focal strength
+          ignore_index: 255
+          mode: multiclass
 
 train:
   start_epoch: 0

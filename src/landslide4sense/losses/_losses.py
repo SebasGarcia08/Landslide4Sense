@@ -22,8 +22,6 @@ class LogCoshTverskyLoss(Module):
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
         return torch.log(torch.cosh(self.dice_loss(y_pred, y_true)))
 
-
-
 class Sum(Module):
     def __init__(self, losses_cfg: ty.List[LossConfig], weights: ty.List[float]):
         super(Sum, self).__init__()
