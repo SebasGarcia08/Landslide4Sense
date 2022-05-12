@@ -20,8 +20,8 @@ model:
     encoder_name: xception
     encoder_weights: imagenet
     classes: 2
-    decoder_use_batchnorm: inplace
-    decoder_attention_type: scse
+    decoder_use_batchnorm: inplace # To reduce memory usage
+    decoder_attention_type: scse # Attention
 
 optimizer:
   restore_from:
