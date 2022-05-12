@@ -12,12 +12,16 @@ data:
     name: transforms
 
 model:
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/lyric-rain-44/epoch_14_train_f1=73.783/model.pth 
+  restore_from: 
   module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
     in_channels: 14
+    encoder_name: xception
+    encoder_weights: imagenet
     classes: 2
+    decoder_use_batchnorm: inplace
+    decoder_attention_type: scse
 
 optimizer:
   restore_from:
@@ -29,10 +33,22 @@ optimizer:
 
 loss:
   module: landslide4sense.losses
-  name: LogCoshDiceLoss
+  name: Sum
   args:
-    ignore_index: 255
-    mode: multiclass
+    - module: landslide4sense.losses
+      name: LogCoshTverskyLoss
+      args:
+        alpha: 0.7 # FP
+        beta: 0.3 # FN
+        ignore_index: 255
+        mode: multiclass
+    - module: segmentation_models_pytorch.losses
+      name: FocalLoss
+      args:
+        alpha: 0.5 # Prior probability of having positive value in target.
+        gamma: 0.2 # focal strength
+        ignore_index: 255
+        mode: multiclass
 
 train:
   start_epoch: 0
