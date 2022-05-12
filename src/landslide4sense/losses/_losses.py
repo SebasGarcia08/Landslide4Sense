@@ -5,6 +5,7 @@ from segmentation_models_pytorch.losses import DiceLoss
 
 class LogCoshDiceLoss(Module):
     def __init__(self, *args, **kwargs):
+        super(LogCoshDiceLoss, self).__init__()
         self.dice_loss = DiceLoss(*args, **kwargs)
 
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:

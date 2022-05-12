@@ -1,8 +1,8 @@
 data:
   dir: ${hydra:runtime.cwd}/data/
-  train_list: ${hydra:runtime.cwd}/data/train.txt
+  train_list: ${hydra:runtime.cwd}/data/train_cleaned.txt
   eval_lists_paths:
-    - ${hydra:runtime.cwd}/data/train.txt
+    - ${hydra:runtime.cwd}/data/train_cleaned.txt
   eval_names:
     - train
   test_list: ${hydra:runtime.cwd}/data/valid.txt
@@ -12,7 +12,7 @@ data:
     name: transforms
 
 model:
-  restore_from: /content/drive/MyDrive/data_science_projects/landslide4sense-2022/models/quiet-salad-43/epoch_4_train_f1=73.748/model.pth
+  restore_from: 
   module: segmentation_models_pytorch
   name: UnetPlusPlus
   args:
@@ -28,8 +28,8 @@ optimizer:
     weight_decay: 0.0005
 
 loss:
-  module: segmentation_models_pytorch.losses
-  name: DiceLoss
+  module: landslide4sense.losses
+  name: LogCoshDiceLoss
   args:
     ignore_index: 255
     mode: multiclass
