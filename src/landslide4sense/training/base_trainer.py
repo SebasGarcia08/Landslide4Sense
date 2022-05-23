@@ -61,7 +61,7 @@ class Trainer:
 
         self.callback_container.on_train_begin(dict())
 
-        for epoch in range(start_epoch, max_epochs):
+        for epoch in range(start_epoch, max_epochs + 1):
             epoch_logs: OptionalDict = dict()
             self.callback_container.on_epoch_begin(epoch, epoch_logs)
 

@@ -119,7 +119,7 @@ class Checkpointer(Callback):
 
     def on_epoch_end(self, epoch: int, logs: OptionalDict = None) -> None:
         if self.early_stopper is None:
-            snapshot_name = f"epoch_{epoch}.pth"
+            snapshot_name = f"epoch={epoch}.pth"
         else:
             if not self.early_stopper.improved:
                 return
@@ -128,7 +128,7 @@ class Checkpointer(Callback):
                 f"epoch_{epoch}_{self.early_stopper.monitor}={rounded_best_res}"
             )
 
-        epoch_path = os.path.join(self.save_dir, snapshot_name)
+        epoch_path = os.path.join(self.save_dir, "ckpts", snapshot_name)
         os.makedirs(epoch_path, exist_ok=True)
 
         model_path = os.path.join(epoch_path, "model.pth")
@@ -139,12 +139,20 @@ class Checkpointer(Callback):
         logger.info(f"Saving optimizer checkpoint at: {optimizer_path}")
         torch.save(self.trainer.optimizer.state_dict(), optimizer_path)
 
+    def on_train_end(self, logs: OptionalDict = None) -> None:
+        if self.early_stopper is None:
+            return
+        best_model_path = os.path.join(self.save_dir, "best_model.pth")
+        logger.info(f"Saving best model to {best_model_path}")
+        torch.save(self.early_stopper._best_weights, best_model_path)
+
 
 @dataclass
 class WandbCallback(Callback):
     wandb_init_kwargs: ty.Dict[str, ty.Any]
     run: ty.Optional[ty.Any] = None
     log_freq: str = "batch"
+    run: ty.Any
 
     def __post_init__(self):
         self.run = wandb.init(**self.wandb_init_kwargs)

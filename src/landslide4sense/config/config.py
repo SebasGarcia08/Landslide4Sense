@@ -118,12 +118,20 @@ class TrainConfig:
     snapshot_dir: str
     seed: int
     callbacks: CallbacksConfig
+    results_filename: str
 
 
 @dataclass
 class PredictConfig:
     snapshot_dir: str
     threshold: float
+
+
+@dataclass
+class CalibrateConfig:
+    data_path: str
+    num_thresholds: int
+    model_filename: str
 
 
 @dataclass
@@ -140,4 +148,5 @@ class Config:
     optimizer: OptimizerConfig
     loss: LossConfig
     train: TrainConfig
+    calibrate: CalibrateConfig
     predict: PredictConfig
