@@ -6,7 +6,7 @@ data:
   dir: ./data/
   train_list: data/train.txt
   eval_lists_paths:
-    - ./data/train_single.txt
+    - ./data/train.txt
   eval_names:
     - train
   test_list: ./data/valid.txt
@@ -17,11 +17,20 @@ data:
 
 model:
   restore_from:
-  module: segmentation_models_pytorch
-  name: UnetPlusPlus 
+  module: landslide4sense.models
+  name: SegFormer
   args:
     in_channels: 14
-    classes: 2  
+    num_classes: 2  
+    widths: [64, 128, 256, 512]
+    depths: [3, 4, 6, 3]
+    all_num_heads: [1, 2, 4, 8]
+    patch_sizes: [7, 3, 3, 3]
+    overlap_sizes: [4, 2, 2, 2]
+    reduction_ratios: [8, 4, 2, 1]
+    mlp_expansions: [4, 4, 4, 4]
+    decoder_channels: 256
+    scale_factors: [8, 4, 2, 1]
 
 optimizer:
   restore_from:

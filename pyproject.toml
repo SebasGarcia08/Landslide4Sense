@@ -22,7 +22,7 @@ hydra-core = "^1.1.1"
 tqdm = "^4.64.0"
 segmentation-models-pytorch = "^0.2.1"
 numba = "^0.55.1"
-dvc = "^2.10.2"
+dvc = {extras = ["gdrive"], version = "^2.10.2"}
 matplotlib = "^3.5.2"
 einops = "^0.4.1"
 
