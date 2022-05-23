@@ -1,0 +1,83 @@
+hydra:
+  run:
+    dir: ./
+
+data:
+  dir: ./data/
+  train_list: data/train.txt
+  eval_lists_paths:
+    - ./data/train_single.txt
+  eval_names:
+    - train
+  test_list: ./data/valid.txt
+  input_size: [128, 128]
+  augmentation:
+    module: landslide4sense.data.augmentations
+    name: transforms
+
+model:
+  restore_from:
+  module: segmentation_models_pytorch
+  name: UnetPlusPlus 
+  args:
+    in_channels: 14
+    classes: 2  
+
+optimizer:
+  restore_from:
+  module: torch.optim
+  name: Adam
+  args:
+    lr:  0.001
+    weight_decay: 0.0005
+
+loss:
+  module: landslide4sense.losses
+  name: Sum
+  args:
+    weights: [0.5, 0.5]
+    losses_cfg:
+      - module: segmentation_models_pytorch.losses
+        name: DiceLoss
+        args:
+          ignore_index: 255
+          mode: multiclass
+      - module: torch.nn
+        name: CrossEntropyLoss
+        args:
+          ignore_index: 255
+
+train:
+  start_epoch: 0
+  steps_per_epoch: 1
+  batch_size: 64
+  num_workers: 4
+  num_steps: 1
+  num_steps_stop: 1
+  gpu_id: 0
+  snapshot_dir: ./models/
+  results_filename: train_results.json
+  seed: 42
+  callbacks:
+    early_stopping:
+      monitor: train_f1
+      mode: max
+      patience: 10
+      best_result: 0.5
+    wandb:
+      project: "landslide4sense"
+      name: test2
+      group: Unet++
+      tags:
+        - val_split
+        - spatial_data_aug
+        - non_spatial_data_aug
+
+calibrate:
+  model_filename: best_model.pth
+  data_path: data/train_100.txt
+  results_filename: calibrate_results.json
+  num_thresholds: 100
+
+predict:
+  snapshot_dir: ./submissions/

@@ -1,3 +1,5 @@
+from tqdm import tqdm
+import json
 import os
 import logging
 
@@ -22,9 +24,18 @@ logger = logging.getLogger(__name__)
 name_classes = ["Non-Landslide", "Landslide"]
 
 
-@hydra.main(config_path="../conf", config_name="config")
+@hydra.main(config_path="../", config_name="params")
 def main(cfg: Config):
     set_deterministic(cfg.train.seed)
+    save_path = os.path.join(
+        cfg.train.snapshot_dir,
+        cfg.train.callbacks.wandb.name,
+        cfg.calibrate.results_filename,
+    )
+
+    with open(save_path, "r") as f:
+        results = json.load(f)
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg.train.gpu_id)
@@ -43,7 +54,12 @@ def main(cfg: Config):
     model = model_cls(**cfg.model.args)
 
     saved_state_dict = torch.load(
-        cfg.model.restore_from, map_location=torch.device(device)
+        os.path.join(
+            cfg.train.snapshot_dir,
+            cfg.train.callbacks.wandb.name,
+            cfg.calibrate.model_filename,
+        ),
+        map_location=torch.device(device),
     )
     model.load_state_dict(saved_state_dict)
 
@@ -62,21 +78,21 @@ def main(cfg: Config):
 
     interp = nn.Upsample(size=(input_size[1], input_size[0]), mode="bilinear")
 
-    print("Testing..........")
     model.eval()
+    pbar = tqdm(enumerate(test_loader), total=len(test_loader))
 
-    for index, batch in enumerate(test_loader):
+    for index, batch in pbar:
         image, _, name = batch
         image = image.float()
         if device == "cuda":
             image = image.cuda()
         name = name[0].split(".")[0].split("/")[-1].replace("image", "mask")
-        print(index + 1, "/", len(test_loader), ": Testing ", name)
+        pbar.set_description(f"Testing: {name}")
 
         with torch.no_grad():
             pred = model(image)
         pred = interp(F.softmax(pred, dim=1)).detach()
-        pred = (pred[:, 1, :, :] > cfg.predict.threshold)
+        pred = pred[:, 1, :, :] > results["optimal_thr"]
         pred = pred.squeeze().data.cpu().numpy().astype("uint8")
         with h5py.File(snapshot_dir + name + ".h5", "w") as hf:
             hf.create_dataset("mask", data=pred)

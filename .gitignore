@@ -3,6 +3,7 @@
 /models/*
 /submissions/*
 wandb
+.hydra
 # Hydra outputs
 /outputs
 .DS_Store

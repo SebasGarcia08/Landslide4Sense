@@ -1,0 +1,147 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python stages/0_train.py
+    deps:
+    - path: ./data/train_single.txt
+      md5: 5b077bb8d4fb4c456e27308cd5f9546a
+      size: 25
+    - path: data/train.txt
+      md5: a830692ca38c3ec0344b34f80c62fd0a
+      size: 105264
+    params:
+      params.yaml:
+        data:
+          dir: ./data/
+          train_list: data/train.txt
+          eval_lists_paths:
+          - ./data/train_single.txt
+          eval_names:
+          - train
+          test_list: ./data/valid.txt
+          input_size:
+          - 128
+          - 128
+          augmentation:
+            module: landslide4sense.data.augmentations
+            name: transforms
+        loss:
+          module: landslide4sense.losses
+          name: Sum
+          args:
+            weights:
+            - 0.5
+            - 0.5
+            losses_cfg:
+            - module: segmentation_models_pytorch.losses
+              name: DiceLoss
+              args:
+                ignore_index: 255
+                mode: multiclass
+            - module: torch.nn
+              name: CrossEntropyLoss
+              args:
+                ignore_index: 255
+        model:
+          restore_from:
+          module: segmentation_models_pytorch
+          name: UnetPlusPlus
+          args:
+            in_channels: 14
+            classes: 2
+        optimizer:
+          restore_from:
+          module: torch.optim
+          name: Adam
+          args:
+            lr: 0.001
+            weight_decay: 0.0005
+        train:
+          start_epoch: 0
+          steps_per_epoch: 1
+          batch_size: 64
+          num_workers: 4
+          num_steps: 1
+          num_steps_stop: 1
+          gpu_id: 0
+          snapshot_dir: ./models/
+          results_filename: train_results.json
+          seed: 42
+          callbacks:
+            early_stopping:
+              monitor: train_f1
+              mode: max
+              patience: 10
+              best_result: 0.5
+            wandb:
+              project: landslide4sense
+              name: test2
+              group: Unet++
+              tags:
+              - val_split
+              - spatial_data_aug
+              - non_spatial_data_aug
+    outs:
+    - path: ./models/test2/best_model.pth
+      md5: 4dc3cb4097f75411a056fd40d4505074
+      size: 104656069
+    - path: ./models/test2/ckpts
+      md5: a43391119a0ceb5892efcd8ba12234b9.dir
+      size: 627318668
+      nfiles: 4
+    - path: ./models/test2/train_results.json
+      md5: 453300984825ef86c9955c66cc4a8c59
+      size: 126
+  calibrate:
+    cmd: python stages/1_calibrate.py
+    deps:
+    - path: ./models/test2/best_model.pth
+      md5: 4dc3cb4097f75411a056fd40d4505074
+      size: 104656069
+    - path: ./models/test2/train_results.json
+      md5: 453300984825ef86c9955c66cc4a8c59
+      size: 126
+    params:
+      params.yaml:
+        calibrate:
+          model_filename: best_model.pth
+          data_path: data/train_100.txt
+          results_filename: calibrate_results.json
+          num_thresholds: 100
+    outs:
+    - path: ./models/test2/calibrate_results.json
+      md5: 793e01aa1536bd3476e6d4b3dd2fb8fb
+      size: 310
+  predict:
+    cmd: python stages/2_predict.py predict.snapshot_dir=./submissions/test2/
+    deps:
+    - path: ./models/test2/best_model.pth
+      md5: 4dc3cb4097f75411a056fd40d4505074
+      size: 104656069
+    - path: ./models/test2/calibrate_results.json
+      md5: 793e01aa1536bd3476e6d4b3dd2fb8fb
+      size: 310
+    params:
+      params.yaml:
+        predict:
+          snapshot_dir: ./submissions/
+    outs:
+    - path: ./submissions/test2/
+      md5: f4eac2d9997946d3ee10d008c50a7aa1.dir
+      size: 4515840
+      nfiles: 245
+  compress:
+    cmd: cd ./submissions/test2/ && zip -rm ../test2.zip * && rm -rf test2/
+    deps:
+    - path: ./submissions/test2
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
+    params:
+      params.yaml:
+        predict:
+          snapshot_dir: ./submissions/
+    outs:
+    - path: ./submissions/test2.zip
+      md5: 74de2714d25b95fc26729654e74de28a
+      size: 105726

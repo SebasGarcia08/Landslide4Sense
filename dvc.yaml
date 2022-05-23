@@ -1,0 +1,48 @@
+stages:
+  train:
+    cmd: python stages/0_train.py
+    params:
+      - data
+      - model
+      - optimizer
+      - loss
+      - train
+    deps:
+      - ${data.train_list}
+      - ${data.eval_lists_paths[0]}
+    outs:
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/best_model.pth 
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/ckpts
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/${train.results_filename}
+
+  calibrate:
+    cmd: python stages/1_calibrate.py
+    params:
+      - calibrate
+    deps:
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/best_model.pth
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/${train.results_filename}
+    outs:
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/${calibrate.results_filename}
+  
+  predict:
+    cmd: python stages/2_predict.py predict.snapshot_dir=${predict.snapshot_dir}${train.callbacks.wandb.name}/ 
+    params:
+      - predict
+    deps: 
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/best_model.pth
+      - ${train.snapshot_dir}${train.callbacks.wandb.name}/${calibrate.results_filename}
+    outs:
+      - ${predict.snapshot_dir}${train.callbacks.wandb.name}/
+
+  compress:
+    cmd: cd ${predict.snapshot_dir}${train.callbacks.wandb.name}/ &&
+         zip -rm ../${train.callbacks.wandb.name}.zip * &&
+         rm -rf ${train.callbacks.wandb.name}/
+    params:
+      - predict
+    deps:
+      - ${predict.snapshot_dir}${train.callbacks.wandb.name}
+    outs:
+      - ${predict.snapshot_dir}${train.callbacks.wandb.name}.zip
+
