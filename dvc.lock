@@ -33,61 +33,16 @@ stages:
         model:
           restore_from:
           module: landslide4sense.models
-          name: SegFormer
+          name: Unet
           args:
-            in_channels: 14
-            num_classes: 2
-            widths:
-            - 64
-            - 128
-            - 256
-            - 512
-            depths:
-            - 3
-            - 4
-            - 6
-            - 3
-            all_num_heads:
-            - 1
-            - 2
-            - 4
-            - 8
-            patch_sizes:
-            - 7
-            - 3
-            - 3
-            - 3
-            overlap_sizes:
-            - 4
-            - 2
-            - 2
-            - 2
-            reduction_ratios:
-            - 32
-            - 16
-            - 8
-            - 4
-            - 2
-            - 1
-            mlp_expansions:
-            - 4
-            - 4
-            - 4
-            - 4
-            decoder_channels: 256
-            scale_factors:
-            - 16
-            - 8
-            - 4
-            - 2
-            - 1
+            n_classes: 2
         optimizer:
           restore_from:
           module: torch.optim
           name: AdamW
           args:
-            lr: 0.0001
-            weight_decay: 0.0001
+            lr: 0.001
+            weight_decay: 0.0005
           scheduler:
             module: torch_poly_lr_decay
             name: PolynomialLRDecay
@@ -97,8 +52,8 @@ stages:
               power: 0.9
         train:
           start_epoch: 0
-          steps_per_epoch: 120
-          batch_size: 32
+          steps_per_epoch: 160
+          batch_size: 100
           num_workers: 4
           num_steps: 100000
           num_steps_stop: 100000
@@ -114,32 +69,32 @@ stages:
               best_result: 0.5
             wandb:
               project: landslide4sense
-              name: seg-life-test
+              name: back-to-basics
               group: segformer
               tags:
               - val_split
               - spatial_data_aug
               - non_spatial_data_aug
     outs:
-    - path: ./models/seg-life-test/best_model.pth
-      md5: f23d1282179aaef6603bd76840a33356
-      size: 323057849
-    - path: ./models/seg-life-test/ckpts
-      md5: 855dd681fbaba6ae25f9bfe5a7c50320.dir
-      size: 2584467776
-      nfiles: 16
-    - path: ./models/seg-life-test/train_results.json
-      md5: 09cb55555696595cb08ded1bd8b33e28
-      size: 135
+    - path: ./models/back-to-basics/best_model.pth
+      md5: b436551062619bfca7f267d2dcc1da7a
+      size: 69175297
+    - path: ./models/back-to-basics/ckpts
+      md5: c73446483c02ae45dab7b4bcd7c11887.dir
+      size: 415055520
+      nfiles: 12
+    - path: ./models/back-to-basics/train_results.json
+      md5: 362f2099513af67d94cc7ebacafc9575
+      size: 136
   calibrate:
     cmd: python stages/1_calibrate.py
     deps:
-    - path: ./models/seg-life-test/best_model.pth
-      md5: f23d1282179aaef6603bd76840a33356
-      size: 323057849
-    - path: ./models/seg-life-test/train_results.json
-      md5: 09cb55555696595cb08ded1bd8b33e28
-      size: 135
+    - path: ./models/back-to-basics/best_model.pth
+      md5: b436551062619bfca7f267d2dcc1da7a
+      size: 69175297
+    - path: ./models/back-to-basics/train_results.json
+      md5: 362f2099513af67d94cc7ebacafc9575
+      size: 136
     params:
       params.yaml:
         calibrate:
@@ -148,32 +103,32 @@ stages:
           results_filename: calibrate_results.json
           num_thresholds: 100
     outs:
-    - path: ./models/seg-life-test/calibrate_results.json
-      md5: 7c1320eecb37fcc400500d0c701794b4
+    - path: ./models/back-to-basics/calibrate_results.json
+      md5: 1df417ca39c82811f98382e8782e827f
       size: 319
   predict:
-    cmd: python stages/2_predict.py predict.snapshot_dir=./submissions/seg-life-test/
+    cmd: python stages/2_predict.py predict.snapshot_dir=./submissions/back-to-basics/
     deps:
-    - path: ./models/seg-life-test/best_model.pth
-      md5: f23d1282179aaef6603bd76840a33356
-      size: 323057849
-    - path: ./models/seg-life-test/calibrate_results.json
-      md5: 7c1320eecb37fcc400500d0c701794b4
+    - path: ./models/back-to-basics/best_model.pth
+      md5: b436551062619bfca7f267d2dcc1da7a
+      size: 69175297
+    - path: ./models/back-to-basics/calibrate_results.json
+      md5: 1df417ca39c82811f98382e8782e827f
       size: 319
     params:
       params.yaml:
         predict:
           snapshot_dir: ./submissions/
     outs:
-    - path: ./submissions/seg-life-test/
-      md5: c30636ea00ede4d577d9714746ebcaf5.dir
+    - path: ./submissions/back-to-basics/
+      md5: 3d8f18d241049bd6dabe9334747f1da1.dir
       size: 4515840
       nfiles: 245
   compress:
-    cmd: cd ./submissions/seg-life-test/ && zip -rm ../seg-life-test.zip * && rm -rf
-      seg-life-test/
+    cmd: cd ./submissions/back-to-basics/ && zip -rm ../back-to-basics.zip * && rm
+      -rf back-to-basics/
     deps:
-    - path: ./submissions/seg-life-test
+    - path: ./submissions/back-to-basics
       md5: d751713988987e9331980363e24189ce.dir
       size: 0
       nfiles: 0
@@ -182,6 +137,6 @@ stages:
         predict:
           snapshot_dir: ./submissions/
     outs:
-    - path: ./submissions/seg-life-test.zip
-      md5: 6271a33c7a0e21425ed4c249ccc2427e
-      size: 120773
+    - path: ./submissions/back-to-basics.zip
+      md5: d978980c660ef3e548c7f0448a31386a
+      size: 122924

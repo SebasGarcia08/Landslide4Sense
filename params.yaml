@@ -18,46 +18,42 @@ data:
 model:
   restore_from: 
   module: landslide4sense.models
-  name: SegFormer
+  name: Unet
   args:
-    in_channels: 14
-    num_classes: 2  
-    widths: [64, 128, 256, 512]
-    depths: [3, 4, 6, 3]
-    all_num_heads: [1, 2, 4, 8]
-    patch_sizes: [7, 3, 3, 3]
-    overlap_sizes: [4, 2, 2, 2]
-    reduction_ratios: [32, 16, 8, 4, 2, 1]
-    mlp_expansions: [4, 4, 4, 4]
-    decoder_channels: 256
-    scale_factors: [16, 8, 4, 2, 1]
+    n_classes: 2
 
 optimizer:
   restore_from:
   module: torch.optim
-  name: AdamW
+  name: SGD
   args:
-    lr: 0.0001
-    weight_decay: 0.0001
+    lr: 0.01
+    weight_decay: 0.0005
+    momentum: 0.9
   scheduler:
     module: torch_poly_lr_decay
     name: PolynomialLRDecay
     args:
-      end_learning_rate: 0.000001
+      end_learning_rate: 0.0001
       max_decay_steps: 100_000
       power: 0.9
 
 
 loss:
   module: torch.nn
-  name: CrossEntropyLoss
+  name: TverskyLoss
   args:
+    mode: multiclass
+    classes: 2
     ignore_index: 255
+    log_loss: True
+    alpha: 0.7
+    beta: 0.3
 
 train:
   start_epoch: 0
-  steps_per_epoch: 120
-  batch_size: 32
+  steps_per_epoch: 30
+  batch_size: 128
   num_workers: 4
   num_steps: 100_000
   num_steps_stop: 100_000
@@ -73,7 +69,7 @@ train:
       best_result: 0.5
     wandb:
       project: "landslide4sense"
-      name: seg-life-test
+      name: back-to-basics
       group: segformer
       tags:
         - val_split
