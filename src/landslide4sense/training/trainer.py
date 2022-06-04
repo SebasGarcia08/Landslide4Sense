@@ -1,6 +1,6 @@
 from ..data.dataset import LandslideDataSet, LabeledDatasetIterable
 from .base_trainer import Trainer
-from ..utils.tools import eval_image
+from ..utils.tools import eval_image, get_lr
 from .. import EPSILON
 
 import torch
@@ -8,7 +8,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 import numpy as np
 import torch.nn.functional as F
-
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim import Optimizer
 from tqdm import tqdm
 
 from dataclasses import dataclass
@@ -33,7 +34,13 @@ class ModelTrainer(Trainer):
     ) -> None:
         self.model.train()
         self.model = self.model.to(self.device)
-        self.optimizer.zero_grad()
+        real_optimizer = self.optimizer
+        scheduler = None
+        if isinstance(self.optimizer, _LRScheduler):
+            scheduler = self.optimizer
+            real_optimizer = self.optimizer.optimizer
+
+        real_optimizer.zero_grad()
 
         images, labels, _, _ = batch
         images = images.to(self.device)
@@ -50,9 +57,12 @@ class ModelTrainer(Trainer):
 
         batch_logs["overall_accuracy"] = batch_oa
         batch_logs["loss"] = loss.item()
+        batch_logs["lr"] = get_lr(self.optimizer)
 
         loss.backward()
-        self.optimizer.step()
+        real_optimizer.step()
+        if scheduler is not None:
+            scheduler.step()
 
     def eval(
         self,

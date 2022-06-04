@@ -123,7 +123,16 @@ def setup_optimizer(cfg: Config, model: nn.Module) -> optim.Optimizer:
             cfg.optimizer.restore_from, map_location=torch.device(device)
         )
         optimizer.load_state_dict(loaded_state_dict)
+
     optimizer_to(optimizer, device)
+
+    if cfg.optimizer.scheduler is not None:
+        scheduler_cls = import_name(
+            cfg.optimizer.scheduler.module, cfg.optimizer.scheduler.name
+        )
+        # Wraps optimizer
+        optimizer = scheduler_cls(optimizer, **cfg.optimizer.scheduler.args)
+
     return optimizer
 
 

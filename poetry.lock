@@ -2570,6 +2570,24 @@ python-versions = ">=3.6.2"
 typing-extensions = "*"
 
 [[package]]
+name = "torch_poly_lr_decay"
+version = "0.0.1"
+description = ""
+category = "main"
+optional = false
+python-versions = "*"
+develop = false
+
+[package.dependencies]
+torch = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/cmpark0126/pytorch-polynomial-lr-decay.git"
+reference = "master"
+resolved_reference = "9251dd7190eccfb1cd08e1ebce52e03cff0cb58a"
+
+[[package]]
 name = "torchvision"
 version = "0.12.0"
 description = "image and video datasets and models for torch deep learning"
@@ -2776,7 +2794,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.11"
-content-hash = "887aaa5f32eeb0701453b29fc637410b604960ba3de9e1e3dd3653c3c8e15302"
+content-hash = "87b4cbfc3d7569e75ad07e4ba9a19d7a8546340e88f8ad35514bc26d6440ccb3"
 
 [metadata.files]
 aiohttp = [
@@ -4584,6 +4602,7 @@ torch = [
     {file = "torch-1.10.0-cp39-none-macosx_10_9_x86_64.whl", hash = "sha256:d6ef87470b44df9970e84542547d5ba7720bb89616602441df555a39b124e2bc"},
     {file = "torch-1.10.0-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:eea675ec01ec4b4a0655fd2984f166a5ca3b933dae6ad4eb4e52eba7026dc176"},
 ]
+torch_poly_lr_decay = []
 torchvision = [
     {file = "torchvision-0.12.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:693656e6790b6ab21e4a6e87e81c2982bad9e455b5eb24e14bb672382ec6130f"},
     {file = "torchvision-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a0be4501ca0ba1b195644c9243f49a1c49a26e52a7f37924c4239d0bf5ecbd8d"},

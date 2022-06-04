@@ -3,9 +3,9 @@ stages:
   train:
     cmd: python stages/0_train.py
     deps:
-    - path: ./data/train_single.txt
-      md5: 5b077bb8d4fb4c456e27308cd5f9546a
-      size: 25
+    - path: ./data/train.txt
+      md5: a830692ca38c3ec0344b34f80c62fd0a
+      size: 105264
     - path: data/train.txt
       md5: a830692ca38c3ec0344b34f80c62fd0a
       size: 105264
@@ -15,7 +15,7 @@ stages:
           dir: ./data/
           train_list: data/train.txt
           eval_lists_paths:
-          - ./data/train_single.txt
+          - ./data/train.txt
           eval_names:
           - train
           test_list: ./data/valid.txt
@@ -26,43 +26,82 @@ stages:
             module: landslide4sense.data.augmentations
             name: transforms
         loss:
-          module: landslide4sense.losses
-          name: Sum
+          module: torch.nn
+          name: CrossEntropyLoss
           args:
-            weights:
-            - 0.5
-            - 0.5
-            losses_cfg:
-            - module: segmentation_models_pytorch.losses
-              name: DiceLoss
-              args:
-                ignore_index: 255
-                mode: multiclass
-            - module: torch.nn
-              name: CrossEntropyLoss
-              args:
-                ignore_index: 255
+            ignore_index: 255
         model:
           restore_from:
-          module: segmentation_models_pytorch
-          name: UnetPlusPlus
+          module: landslide4sense.models
+          name: SegFormer
           args:
             in_channels: 14
-            classes: 2
+            num_classes: 2
+            widths:
+            - 64
+            - 128
+            - 256
+            - 512
+            depths:
+            - 3
+            - 4
+            - 6
+            - 3
+            all_num_heads:
+            - 1
+            - 2
+            - 4
+            - 8
+            patch_sizes:
+            - 7
+            - 3
+            - 3
+            - 3
+            overlap_sizes:
+            - 4
+            - 2
+            - 2
+            - 2
+            reduction_ratios:
+            - 32
+            - 16
+            - 8
+            - 4
+            - 2
+            - 1
+            mlp_expansions:
+            - 4
+            - 4
+            - 4
+            - 4
+            decoder_channels: 256
+            scale_factors:
+            - 16
+            - 8
+            - 4
+            - 2
+            - 1
         optimizer:
           restore_from:
           module: torch.optim
-          name: Adam
+          name: AdamW
           args:
-            lr: 0.001
-            weight_decay: 0.0005
+            lr: 0.0001
+            weight_decay: 0.0001
+          scheduler:
+            module: torch_poly_lr_decay
+            name: PolynomialLRDecay
+            args:
+              end_learning_rate: 1e-06
+              max_decay_steps: 100000
+              power: 0.9
         train:
           start_epoch: 0
-          steps_per_epoch: 1
-          batch_size: 64
+          steps_per_epoch: 120
+          batch_size: 32
           num_workers: 4
-          num_steps: 1
-          num_steps_stop: 1
+          num_steps: 100000
+          num_steps_stop: 100000
           gpu_id: 0
           snapshot_dir: ./models/
           results_filename: train_results.json
@@ -75,65 +114,66 @@ stages:
               best_result: 0.5
             wandb:
               project: landslide4sense
-              name: test2
-              group: Unet++
+              name: seg-life-test
+              group: segformer
               tags:
               - val_split
               - spatial_data_aug
               - non_spatial_data_aug
     outs:
-    - path: ./models/test2/best_model.pth
-      md5: 4dc3cb4097f75411a056fd40d4505074
-      size: 104656069
-    - path: ./models/test2/ckpts
-      md5: a43391119a0ceb5892efcd8ba12234b9.dir
-      size: 627318668
-      nfiles: 4
-    - path: ./models/test2/train_results.json
-      md5: 453300984825ef86c9955c66cc4a8c59
-      size: 126
+    - path: ./models/seg-life-test/best_model.pth
+      md5: f23d1282179aaef6603bd76840a33356
+      size: 323057849
+    - path: ./models/seg-life-test/ckpts
+      md5: 855dd681fbaba6ae25f9bfe5a7c50320.dir
+      size: 2584467776
+      nfiles: 16
+    - path: ./models/seg-life-test/train_results.json
+      md5: 09cb55555696595cb08ded1bd8b33e28
+      size: 135
   calibrate:
     cmd: python stages/1_calibrate.py
     deps:
-    - path: ./models/test2/best_model.pth
-      md5: 4dc3cb4097f75411a056fd40d4505074
-      size: 104656069
-    - path: ./models/test2/train_results.json
-      md5: 453300984825ef86c9955c66cc4a8c59
-      size: 126
+    - path: ./models/seg-life-test/best_model.pth
+      md5: f23d1282179aaef6603bd76840a33356
+      size: 323057849
+    - path: ./models/seg-life-test/train_results.json
+      md5: 09cb55555696595cb08ded1bd8b33e28
+      size: 135
     params:
       params.yaml:
         calibrate:
           model_filename: best_model.pth
-          data_path: data/train_100.txt
+          data_path: data/train.txt
           results_filename: calibrate_results.json
           num_thresholds: 100
     outs:
-    - path: ./models/test2/calibrate_results.json
-      md5: 793e01aa1536bd3476e6d4b3dd2fb8fb
-      size: 310
+    - path: ./models/seg-life-test/calibrate_results.json
+      md5: 7c1320eecb37fcc400500d0c701794b4
+      size: 319
   predict:
-    cmd: python stages/2_predict.py predict.snapshot_dir=./submissions/test2/
+    cmd: python stages/2_predict.py predict.snapshot_dir=./submissions/seg-life-test/
     deps:
-    - path: ./models/test2/best_model.pth
-      md5: 4dc3cb4097f75411a056fd40d4505074
-      size: 104656069
-    - path: ./models/test2/calibrate_results.json
-      md5: 793e01aa1536bd3476e6d4b3dd2fb8fb
-      size: 310
+    - path: ./models/seg-life-test/best_model.pth
+      md5: f23d1282179aaef6603bd76840a33356
+      size: 323057849
+    - path: ./models/seg-life-test/calibrate_results.json
+      md5: 7c1320eecb37fcc400500d0c701794b4
+      size: 319
     params:
       params.yaml:
         predict:
           snapshot_dir: ./submissions/
     outs:
-    - path: ./submissions/test2/
-      md5: f4eac2d9997946d3ee10d008c50a7aa1.dir
+    - path: ./submissions/seg-life-test/
+      md5: c30636ea00ede4d577d9714746ebcaf5.dir
       size: 4515840
       nfiles: 245
   compress:
-    cmd: cd ./submissions/test2/ && zip -rm ../test2.zip * && rm -rf test2/
+    cmd: cd ./submissions/seg-life-test/ && zip -rm ../seg-life-test.zip * && rm -rf
+      seg-life-test/
     deps:
-    - path: ./submissions/test2
+    - path: ./submissions/seg-life-test
       md5: d751713988987e9331980363e24189ce.dir
       size: 0
       nfiles: 0
@@ -142,6 +182,6 @@ stages:
         predict:
           snapshot_dir: ./submissions/
     outs:
-    - path: ./submissions/test2.zip
-      md5: 74de2714d25b95fc26729654e74de28a
-      size: 105726
+    - path: ./submissions/seg-life-test.zip
+      md5: 6271a33c7a0e21425ed4c249ccc2427e
+      size: 120773

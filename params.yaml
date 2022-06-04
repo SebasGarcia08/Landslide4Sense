@@ -16,7 +16,7 @@ data:
     name: transforms
 
 model:
-  restore_from:
+  restore_from: 
   module: landslide4sense.models
   name: SegFormer
   args:
@@ -27,42 +27,40 @@ model:
     all_num_heads: [1, 2, 4, 8]
     patch_sizes: [7, 3, 3, 3]
     overlap_sizes: [4, 2, 2, 2]
-    reduction_ratios: [8, 4, 2, 1]
+    reduction_ratios: [32, 16, 8, 4, 2, 1]
     mlp_expansions: [4, 4, 4, 4]
     decoder_channels: 256
-    scale_factors: [8, 4, 2, 1]
+    scale_factors: [16, 8, 4, 2, 1]
 
 optimizer:
   restore_from:
   module: torch.optim
-  name: Adam
+  name: AdamW
   args:
-    lr:  0.001
-    weight_decay: 0.0005
+    lr: 0.0001
+    weight_decay: 0.0001
+  scheduler:
+    module: torch_poly_lr_decay
+    name: PolynomialLRDecay
+    args:
+      end_learning_rate: 0.000001
+      max_decay_steps: 100_000
+      power: 0.9
+
 
 loss:
-  module: landslide4sense.losses
-  name: Sum
+  module: torch.nn
+  name: CrossEntropyLoss
   args:
-    weights: [0.5, 0.5]
-    losses_cfg:
-      - module: segmentation_models_pytorch.losses
-        name: DiceLoss
-        args:
-          ignore_index: 255
-          mode: multiclass
-      - module: torch.nn
-        name: CrossEntropyLoss
-        args:
-          ignore_index: 255
+    ignore_index: 255
 
 train:
   start_epoch: 0
-  steps_per_epoch: 1
-  batch_size: 64
+  steps_per_epoch: 120
+  batch_size: 32
   num_workers: 4
-  num_steps: 1
-  num_steps_stop: 1
+  num_steps: 100_000
+  num_steps_stop: 100_000
   gpu_id: 0
   snapshot_dir: ./models/
   results_filename: train_results.json
@@ -75,8 +73,8 @@ train:
       best_result: 0.5
     wandb:
       project: "landslide4sense"
-      name: test2
-      group: Unet++
+      name: seg-life-test
+      group: segformer
       tags:
         - val_split
         - spatial_data_aug
@@ -84,7 +82,7 @@ train:
 
 calibrate:
   model_filename: best_model.pth
-  data_path: data/train_100.txt
+  data_path: data/train.txt
   results_filename: calibrate_results.json
   num_thresholds: 100
 

@@ -2,6 +2,7 @@ import numpy as np
 import typing as ty
 import torch
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 
 
 def eval_image(
@@ -44,3 +45,11 @@ def optimizer_to(optim: Optimizer, device: str):
                     subparam.data = subparam.data.to(device)
                     if subparam._grad is not None:
                         subparam._grad.data = subparam._grad.data.to(device)
+
+
+def get_lr(optimizer: ty.Union[Optimizer, _LRScheduler]) -> float:
+    if isinstance(optimizer, Optimizer):
+        for param_group in optimizer.param_groups:
+            return param_group["lr"][0]
+    elif isinstance(optimizer, _LRScheduler):
+        return optimizer.get_lr()[0]

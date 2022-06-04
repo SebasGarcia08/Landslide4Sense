@@ -102,7 +102,7 @@ def main(cfg: Config):
         logger.warning("Could not load CUDA, trying to do inference with cpu...")
 
     test_loader = data.DataLoader(
-        LandslideDataSet(cfg.data.dir, cfg.calibrate.data_path, set="labeled"),
+        LandslideDataSet(cfg.data.dir, cfg.calibrate.data_path, set="labeled", max_iters=1),
         batch_size=cfg.train.batch_size,
         shuffle=False,
         num_workers=cfg.train.num_workers,

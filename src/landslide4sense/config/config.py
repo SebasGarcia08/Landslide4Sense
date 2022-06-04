@@ -76,11 +76,19 @@ class CallbacksConfig:
 
 
 @dataclass
+class LRSchedulerConfig:
+    name: str
+    module: str
+    args: ty.Dict
+
+
+@dataclass
 class OptimizerConfig:
     name: str
     module: str
     args: ty.Dict
     restore_from: ty.Optional[str] = None
+    scheduler: ty.Optional[LRSchedulerConfig] = None
 
 
 @dataclass

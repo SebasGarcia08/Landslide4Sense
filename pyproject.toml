@@ -25,6 +25,7 @@ numba = "^0.55.1"
 dvc = {extras = ["gdrive"], version = "^2.10.2"}
 matplotlib = "^3.5.2"
 einops = "^0.4.1"
+torch-poly-lr-decay = {git = "https://github.com/cmpark0126/pytorch-polynomial-lr-decay.git"}
 
 [tool.poetry.dev-dependencies]
 pip-tools = "^6.6.0"

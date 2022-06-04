@@ -11,5 +11,6 @@ transforms = A.Compose(
         A.Transpose(p=0.5),
         A.RandomSizedCrop(min_max_height=[96, 96], height=128, width=128, p=0.5),
         A.ShiftScaleRotate(p=0.5),
+        A.RandomBrightnessContrast(p=0.5),
     ]
 )
